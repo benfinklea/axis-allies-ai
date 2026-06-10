@@ -13,6 +13,9 @@ syncs to Photos on the Mac via iCloud), then:
                                      # (Files app -> iCloud Drive ->
                                      # AxisAllies) instead of Photos —
                                      # use when Photos sync lags
+    python3 photos.py --airdrop      # pull from ~/Downloads on the host:
+                                     # AirDrop the shots to the Mac for
+                                     # instant transfer (no iCloud wait)
 
 Pulls the newest photos out of the Photos library on PHOTOS_HOST over SSH,
 downsizes them, sends them with the engine's board state to VISION_MODEL
@@ -86,11 +89,13 @@ def fetch_newest(count):
     return sorted(dest.glob("small_*.jpg"))
 
 
-def fetch_from_folder(count):
-    """Newest `count` images from the iCloud Drive folder on the host —
-    Files-app saves sync in seconds, unlike the Photos library."""
-    folder = getattr(config, "PHOTOS_FOLDER",
-                     "Library/Mobile Documents/com~apple~CloudDocs/AxisAllies")
+def fetch_from_folder(count, folder=None):
+    """Newest `count` images from a folder on the host. Default is the
+    iCloud Drive AxisAllies folder; --airdrop uses ~/Downloads (AirDrop
+    lands there — instant over LAN, no cloud round-trip)."""
+    if folder is None:
+        folder = getattr(config, "PHOTOS_FOLDER",
+                         "Library/Mobile Documents/com~apple~CloudDocs/AxisAllies")
     remote = (
         f'cd "$HOME/{folder}" || exit 1; '
         f"rm -rf {EXPORT_DIR} && mkdir -p {EXPORT_DIR}; i=1; "
@@ -164,8 +169,12 @@ def main():
     count = int(args[args.index("--count") + 1]) if "--count" in args else 3
     if "--wait" in args:
         wait_for_new(count)
-    photos = (fetch_from_folder(count) if "--folder" in args
-              else fetch_newest(count))
+    if "--airdrop" in args:
+        photos = fetch_from_folder(count, folder="Downloads")
+    elif "--folder" in args:
+        photos = fetch_from_folder(count)
+    else:
+        photos = fetch_newest(count)
     print(f"fetched {len(photos)} photos -> {photos[0].parent}")
 
     if "--describe" in args:
