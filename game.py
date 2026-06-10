@@ -4,6 +4,8 @@
     python3 game.py            # resume logs/state.json or start a new game
     python3 game.py --new      # force a fresh game
     python3 game.py --stub     # all five powers driven by the offline stub
+    python3 game.py --auto-dice     # script rolls the dice (simulation)
+    python3 game.py --max-turns N   # stop after N power-turns (simulation)
 """
 import json
 import sys
@@ -210,6 +212,12 @@ def run_turn(state, players, table, power):
 
 
 def main():
+    if "--auto-dice" in sys.argv:
+        config.DICE_MODE = "auto"
+    max_turns = None
+    if "--max-turns" in sys.argv:
+        max_turns = int(sys.argv[sys.argv.index("--max-turns") + 1])
+    turns_played = 0
     table = Table()
     fresh = "--new" in sys.argv or not Path(config.STATE_FILE).exists()
     state = S.new_game() if fresh else S.load(config.STATE_FILE)
@@ -229,6 +237,11 @@ def main():
             win = S.victory(state)
             if win:
                 table.speak(f"GAME OVER: the {win[0]} win — {win[1]}!")
+                return
+            turns_played += 1
+            if max_turns is not None and turns_played >= max_turns:
+                table.speak(f"Stopping after {turns_played} turns as asked. "
+                            f"The war continues another day.")
                 return
         if config.ECONOMIC_VICTORY and \
                 S.side_income(state, "axis") >= config.ECON_VICTORY_AXIS_INCOME:
