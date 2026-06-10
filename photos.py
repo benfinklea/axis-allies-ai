@@ -37,7 +37,12 @@ from speech import Table
 
 SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5"]
 EXPORT_DIR = "/tmp/axis-allies-photos"
-LONG_EDGE = "1568"   # vision-model sweet spot
+LONG_EDGE = "2048"   # enough detail to count pieces in section close-ups
+
+# Photo technique that actually verifies (wide shots can't resolve stacks):
+# one full-board context shot, then 4-6 straight-down section close-ups
+# (Europe, USSR, Pacific, Americas, Africa/Med) with territory names
+# readable and no glare. Stills beat video — video frames are softer.
 
 PIECE_COLORS = ("Piece colors (Milton Bradley classic): Germany=gray, "
                 "Japan=orange/yellow, UK=tan/brown, USSR=reddish brown, "
@@ -191,10 +196,17 @@ def main():
     (photos[0].parent / "verdict.md").write_text(answer + "\n")
 
     table = Table()
-    verdict = next((l for l in answer.splitlines()
-                    if l.strip().upper().startswith("VERDICT")), None)
-    spoken = (verdict.split(":", 1)[-1].strip() if verdict
-              else "Photo check complete. Read the report on screen.")
+    spoken = "Photo check complete. Read the report on screen."
+    lines = answer.splitlines()
+    for i, line in enumerate(lines):
+        bare = line.strip().strip("*#").strip()
+        if bare.upper().startswith(("VERDICT", "3. VERDICT")):
+            after = bare.split(":", 1)[-1].strip() if ":" in bare else ""
+            if not after:  # verdict text on the following line(s)
+                after = next((l.strip() for l in lines[i + 1:] if l.strip()), "")
+            if after:
+                spoken = after
+            break
     table.speak(f"Photo verification: {spoken}")
 
 
