@@ -42,14 +42,20 @@ SSH = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5"]
 EXPORT_DIR = "/tmp/axis-allies-photos"
 LONG_EDGE = "2048"   # enough detail to count pieces in section close-ups
 
-# Photo technique that actually verifies (wide shots can't resolve stacks):
-# one full-board context shot, then 4-6 straight-down section close-ups
-# (Europe, USSR, Pacific, Americas, Africa/Med) with territory names
-# readable and no glare. Stills beat video — video frames are softer.
+# Photo technique that actually verifies (tested 2026-06-10):
+# one straight-down full-board shot for layout, then section close-ups at
+# ~45 degrees — high enough that territory names are readable, low enough
+# that the chip stacks under pieces show edge-on. Near-horizontal shots
+# fail (pieces occlude each other; can't tell which territory is which).
+# Stills beat video — video frames are softer.
 
 PIECE_COLORS = ("Piece colors (Milton Bradley classic): Germany=gray, "
                 "Japan=orange/yellow, UK=tan/brown, USSR=reddish brown, "
-                "USA=olive green.")
+                "USA=olive green. COUNTING CHIPS: a single plastic piece "
+                "standing on a stack of chips represents multiple copies of "
+                "that unit — each chip adds one (a piece on 2 chips = 3 of "
+                "that unit). Count chips edge-on in angled shots instead of "
+                "trying to separate plastic figures.")
 
 
 def host():
