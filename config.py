@@ -72,6 +72,13 @@ SPEECH_RATE = 190
 # (passwordless SSH required), or None for this machine. Falls back to
 # local `say` automatically if the remote is unreachable.
 SPEECH_HOST = "benfinklea@bens-mac.local"
+
+# Photo verification (photos.py): iPhone shots iCloud-sync into the Photos
+# library on this host; we pull the newest ones from there over SSH.
+# VISION_MODEL must be a gateway route that passes images through —
+# frontier-or is the only one today (OpenRouter, metered: cents per check).
+PHOTOS_HOST = "benfinklea@bens-mac.local"
+VISION_MODEL = "frontier-or"
 STATE_FILE = "logs/state.json"
 TRANSCRIPT = "logs/transcript.md"
 SNAPSHOT_DIR = "logs/snapshots"
