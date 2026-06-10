@@ -9,6 +9,10 @@ syncs to Photos on the Mac via iCloud), then:
                                      # to sync before grabbing them
     python3 photos.py --describe     # no comparison; just inventory what
                                      # the vision model can see
+    python3 photos.py --folder       # pull from the iCloud Drive folder
+                                     # (Files app -> iCloud Drive ->
+                                     # AxisAllies) instead of Photos —
+                                     # use when Photos sync lags
 
 Pulls the newest photos out of the Photos library on PHOTOS_HOST over SSH,
 downsizes them, sends them with the engine's board state to VISION_MODEL
@@ -77,6 +81,29 @@ def fetch_newest(count):
     return sorted(dest.glob("small_*.jpg"))
 
 
+def fetch_from_folder(count):
+    """Newest `count` images from the iCloud Drive folder on the host —
+    Files-app saves sync in seconds, unlike the Photos library."""
+    folder = getattr(config, "PHOTOS_FOLDER",
+                     "Library/Mobile Documents/com~apple~CloudDocs/AxisAllies")
+    remote = (
+        f'cd "$HOME/{folder}" || exit 1; '
+        f"rm -rf {EXPORT_DIR} && mkdir -p {EXPORT_DIR}; i=1; "
+        f"for f in $(ls -t | grep -iE '\\.(jpe?g|heic|png)$' | head -{count}); "
+        f'do sips -s format jpeg -Z {LONG_EDGE} "$f" '
+        f"--out {EXPORT_DIR}/small_$i.jpg >/dev/null 2>&1; i=$((i+1)); done; "
+        f"ls {EXPORT_DIR}/small_*.jpg 2>/dev/null")
+    out = subprocess.run(SSH + [host(), remote], capture_output=True, text=True)
+    names = [Path(n).name for n in out.stdout.split()]
+    if not names:
+        sys.exit(f"no images found in iCloud Drive {folder} on {host()}")
+    dest = ROOT / "logs" / "photos" / time.strftime("%Y%m%d-%H%M%S")
+    dest.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["scp", "-q"] + [f"{host()}:{EXPORT_DIR}/{n}" for n in names]
+                   + [str(dest)], check=True)
+    return sorted(dest.glob("small_*.jpg"))
+
+
 def wait_for_new(count, timeout=300):
     base = photo_count()
     if base is None:
@@ -132,7 +159,8 @@ def main():
     count = int(args[args.index("--count") + 1]) if "--count" in args else 3
     if "--wait" in args:
         wait_for_new(count)
-    photos = fetch_newest(count)
+    photos = (fetch_from_folder(count) if "--folder" in args
+              else fetch_newest(count))
     print(f"fetched {len(photos)} photos -> {photos[0].parent}")
 
     if "--describe" in args:
