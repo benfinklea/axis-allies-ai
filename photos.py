@@ -53,9 +53,10 @@ PIECE_COLORS = ("Piece colors (Milton Bradley classic): Germany=gray, "
                 "Japan=orange/yellow, UK=tan/brown, USSR=reddish brown, "
                 "USA=olive green. COUNTING CHIPS: a single plastic piece "
                 "standing on a stack of chips represents multiple copies of "
-                "that unit — each chip adds one (a piece on 2 chips = 3 of "
-                "that unit). Count chips edge-on in angled shots instead of "
-                "trying to separate plastic figures.")
+                "that unit — each white/gray chip adds 1 and each RED chip "
+                "adds 5 (a piece on 2 white chips = 3 units; a piece on 1 "
+                "red + 1 white = 7). Count chips edge-on in angled shots "
+                "instead of trying to separate plastic figures.")
 
 
 def host():
