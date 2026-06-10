@@ -36,14 +36,15 @@ def build_players(all_stub=False):
                    f"classic Axis & Allies game.\n\nHOUSE RULE: you may not "
                    f"use web search, browsing, or any external tool to look "
                    f"up strategy or help. Play purely from your own training "
-                   f"knowledge.\n\nTURN STRUCTURE: every turn runs strictly "
-                   f"in this order — 1 purchase units, 2 combat movement, "
-                   f"3 combat resolution, 4 noncombat movement, 5 mobilize "
+                   f"knowledge.\n\nACTION SEQUENCE: every turn follows the "
+                   f"classic action sequence, strictly in order — "
+                   f"1 develop weapons and purchase units, 2 combat "
+                   f"movement, 3 combat, 4 noncombat movement, 5 mobilize "
                    f"new units, 6 collect income. You will be prompted for "
-                   f"each phase one at a time, in order. Answer ONLY for the "
-                   f"phase you are asked about: no moves during purchase, no "
+                   f"each step one at a time, in order. Answer ONLY for the "
+                   f"step you are asked about: no moves during purchase, no "
                    f"purchases during movement, and your reasoning should "
-                   f"stay on the current phase.\n\n{rules}")
+                   f"stay on the current step.\n\n{rules}")
         provider = "stub" if all_stub else cfg["provider"]
         if provider == "stub":
             players[power] = StubPlayer(power, cfg, persona)
