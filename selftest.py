@@ -74,6 +74,10 @@ def main():
         state["round"] += 1
 
     # the corpus log captured the game: spoken lines, AI decisions, dice
+    # everyone gets a final word when a game ends
+    from game import closing_comments
+    closing_comments(state, players, table, glog, "selftest draw")
+
     # the corpus logs captured everything: spoken lines + AI decisions in the
     # game log, dice in the synthetic battle's log (stub rounds may not fight)
     kinds = {json.loads(l)["e"]

@@ -18,6 +18,13 @@ games, troubleshoot providers, and make small fixes between sessions.
 - Roster: Germany=ChatGPT (`codex`), Japan=claude-fable-5 (`fable`),
   UK=Gemini (`gemini`), USSR=GLM-4.5-Air (`code-glm`, local),
   USA=Qwen3-235B (`big`, local). Backticked names are fleet-gateway intents.
+- No outside help: AIs may not web-search or use external tools for
+  strategy — training knowledge only. Enforced in the system prompt
+  (game.py persona); we also never pass tools in API requests. Keep it
+  that way.
+- One voice at a time: all speech is serialized through a lock
+  (speech.py). Never call `say` directly on the speech host — route
+  through speech.Table or you'll talk over the game.
 
 ## Source of truth rules
 

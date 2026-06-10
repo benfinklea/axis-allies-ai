@@ -33,7 +33,10 @@ def build_players(all_stub=False):
     players = {}
     for power, cfg in config.PLAYERS.items():
         persona = (f"You are the supreme commander of {power.upper()} in a "
-                   f"classic Axis & Allies game.\n\n{rules}")
+                   f"classic Axis & Allies game.\n\nHOUSE RULE: you may not "
+                   f"use web search, browsing, or any external tool to look "
+                   f"up strategy or help. Play purely from your own training "
+                   f"knowledge.\n\n{rules}")
         provider = "stub" if all_stub else cfg["provider"]
         if provider == "stub":
             players[power] = StubPlayer(power, cfg, persona)
@@ -281,6 +284,24 @@ def run_turn(state, players, table, power, glog):
         table.speak(d["assessment"])
 
 
+def closing_comments(state, players, table, glog, result_text):
+    """Every commander gets a final word after the game ends."""
+    state["phase"] = "closing"
+    board = S.summary_for_ai(state)
+    for power in S.TURN_ORDER:
+        player = players[power]
+        d = ai_phase(player, state,
+                     f"{board}\n\nTHE GAME IS OVER: {result_text}. Your final "
+                     f"word, in three or four short sentences: what went "
+                     f"right or wrong for you this game, and what you would "
+                     f"do differently next time. Plain speech; read aloud.",
+                     ASSESSMENT_SCHEMA, getattr(player, "closing", None), glog)
+        if d.get("assessment"):
+            table.voice = config.PLAYERS[power].get("voice")
+            table.speak(f"{power.upper()}'s final word.")
+            table.speak(d["assessment"])
+
+
 def main():
     if "--auto-dice" in sys.argv:
         config.DICE_MODE = "auto"
@@ -322,6 +343,8 @@ def main():
             if win:
                 glog.result(win[0], win[1])
                 table.speak(f"GAME OVER: the {win[0]} win — {win[1]}!")
+                closing_comments(state, players, table, glog,
+                                 f"the {win[0]} won ({win[1]})")
                 return
             turns_played += 1
             if max_turns is not None and turns_played >= max_turns:
@@ -334,6 +357,8 @@ def main():
                                 f"{S.side_income(state, 'axis')} IPC income")
             table.speak(f"GAME OVER: Axis economic victory "
                         f"({S.side_income(state, 'axis')} IPC income)!")
+            closing_comments(state, players, table, glog,
+                             "the Axis won by economic victory")
             return
         state["round"] += 1
         state["turn"] = S.TURN_ORDER[0]

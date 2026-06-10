@@ -19,6 +19,10 @@ class StubPlayer(Player):
         return {"assessment": f"Stub {self.power} considers that turn "
                               f"entirely adequate."}
 
+    def closing(self, state):
+        return {"assessment": f"Stub {self.power} blames the dice and "
+                              f"demands a rematch."}
+
     def purchases(self, state):
         ipcs = state["ipcs"][self.power]
         n = ipcs // S.STATS["infantry"]["cost"]
