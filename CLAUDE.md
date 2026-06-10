@@ -61,6 +61,12 @@ Then configure the live providers:
    (Last verified all-5 OK: 2026-06-10.)
 4. Japan's `fable` intent is free on the Claude plan through Jun 22, 2026,
    then becomes metered — switch japan to `opus` (still $0) after that.
+5. `python3 tools/viewer.py` and open http://localhost:8484 — live view of
+   every power, the AI playing it, its latest thinking, full per-AI comms,
+   war-council channels, and the board. Read-only; leave it open all game.
+6. Audio plays on the Mac named by `SPEECH_HOST` in config.py (over SSH),
+   falling back to the local machine if unreachable. Set it to None to
+   speak locally.
 
 ## Troubleshooting map
 
@@ -77,7 +83,13 @@ Then configure the live providers:
 
 ## Code map (one line each)
 
-- `game.py` — turn/phase loop, purchase+research, mobilize, income, victory.
+- `game.py` — turn/phase loop: briefing (spoken state-of-the-war), purchase+
+  research, combat, noncombat, mobilize, income, debrief (spoken turn recap).
+- `gamelog.py` — one JSONL per game in `logs/games/` (every prompt, reply,
+  spoken line, dice roll, result) — the corpus for judging AIs across games.
+- `tools/viewer.py` + `viewer.html` — live web viewer (`python3
+  tools/viewer.py`, port 8484): per-power cards with model + latest thinking,
+  click-through full AI conversations, war-council channels, transcript, board.
 - `state.py` — board state, BFS movement legality, capture/loot, AI text summary.
 - `engine/combat.py` — battle rounds: AA, sub surprise, casualties, retreat.
 - `engine/dice.py` — manual digit-string entry or auto-roll.

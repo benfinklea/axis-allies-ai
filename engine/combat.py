@@ -37,7 +37,7 @@ def resolve_battle(state, terr, attacker, ui):
     if aa_owner and air and not S.TERR[terr]["water"]:
         n_air = sum(air.values())
         rolls = dice.roll(n_air, f"{aa_owner} AA fire vs {n_air} aircraft",
-                          ui.dice_mode, ui.speak)
+                          ui.dice_mode, ui.speak, ui.dice_log)
         shot_down = _hits(rolls, 1)
         if shot_down:
             lost = ui.ask_casualties(attacker, air, shot_down, terr, aa_fire=True)
@@ -67,7 +67,7 @@ def resolve_battle(state, terr, attacker, ui):
         if subs and "submarine" not in pre_removed:
             sub_target = 3 if "super_subs" in tech_a else 2
             rolls = dice.roll(subs, f"{attacker} submarine surprise strike",
-                              ui.dice_mode, ui.speak)
+                              ui.dice_mode, ui.speak, ui.dice_log)
             h = _hits(rolls, sub_target)
             if h:
                 for p in list(def_by_power):
@@ -87,7 +87,7 @@ def resolve_battle(state, terr, attacker, ui):
         atk_hits = 0
         for u, n, target in atk_fire:
             rolls = dice.roll(n, f"{attacker} {n} {u} (hit on {target} or less)",
-                              ui.dice_mode, ui.speak)
+                              ui.dice_mode, ui.speak, ui.dice_log)
             atk_hits += _hits(rolls, target)
 
         # Defender fire (all defenders, all units, including subs at defense)
@@ -95,7 +95,7 @@ def resolve_battle(state, terr, attacker, ui):
         for p, units in def_by_power.items():
             for u, n, target in _firepower(units, "defense", state["tech"].get(p, [])):
                 rolls = dice.roll(n, f"{p} {n} {u} defending (hit on {target} or less)",
-                                  ui.dice_mode, ui.speak)
+                                  ui.dice_mode, ui.speak, ui.dice_log)
                 def_hits += _hits(rolls, target)
 
         # Casualties — AI-chosen, simultaneous removal

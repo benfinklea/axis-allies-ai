@@ -11,6 +11,14 @@ class StubPlayer(Player):
         raise NotImplementedError("stub uses the typed helpers below")
 
     # The orchestrator calls these helpers directly when provider == "stub".
+    def assessment(self, state):
+        return {"assessment": f"Stub {self.power} reports the lines are "
+                              f"holding and sees no reason to panic."}
+
+    def debrief(self, state):
+        return {"assessment": f"Stub {self.power} considers that turn "
+                              f"entirely adequate."}
+
     def purchases(self, state):
         ipcs = state["ipcs"][self.power]
         n = ipcs // S.STATS["infantry"]["cost"]

@@ -45,6 +45,10 @@ TECH_SCHEMA = _obj({
     "choice": {"type": "string"},
 })
 
+ASSESSMENT_SCHEMA = _obj({
+    "assessment": {"type": "string"},
+})
+
 
 class Player:
     """One power's brain. Implementations keep their own running message

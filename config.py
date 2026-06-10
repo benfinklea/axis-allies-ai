@@ -42,7 +42,8 @@ PLAYERS = {
         "model": "gemini",               # Gemini 3.1 Pro via subscription
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Serena",
+        "voice": "Moira",  # Serena isn't installed on bens-mac; download it
+                           # (System Settings → Spoken Content) to switch back
     },
     "ussr": {
         "provider": "openai_compat",
@@ -68,6 +69,10 @@ PLAYERS = {
 # --- Table settings ---------------------------------------------------------
 SPEECH = True                # macOS `say`; auto-disabled if unavailable
 SPEECH_RATE = 190
+# Where the audio plays: an SSH target whose Mac speakers should speak
+# (passwordless SSH required), or None for this machine. Falls back to
+# local `say` automatically if the remote is unreachable.
+SPEECH_HOST = "benfinklea@bens-mac.local"
 STATE_FILE = "logs/state.json"
 TRANSCRIPT = "logs/transcript.md"
 SNAPSHOT_DIR = "logs/snapshots"
