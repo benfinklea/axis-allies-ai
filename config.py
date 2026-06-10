@@ -35,22 +35,21 @@ PLAYERS = {
         "model": "fable",                # Claude Fable 5 via Claude plan
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Kyoko",
+        "voice": "Reed (English (US))",
     },
     "uk": {
         "provider": "openai_compat",
         "model": "gemini",               # Gemini 3.1 Pro via subscription
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Moira",  # Serena isn't installed on bens-mac; download it
-                           # (System Settings → Spoken Content) to switch back
+        "voice": "Moira",
     },
     "ussr": {
         "provider": "openai_compat",
         "model": "code-glm",             # GLM-4.5-Air 106B on gandalf
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Milena",
+        "voice": "Karen",
     },
     "usa": {
         # "big" shares gandalf with ussr's "code-glm" and they evict each
