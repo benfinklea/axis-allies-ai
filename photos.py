@@ -137,17 +137,33 @@ def wait_for_new(count, timeout=300):
     sys.exit("timed out waiting for photos to sync; try again or drop --wait")
 
 
-def board_text(use_setup):
-    if use_setup:
-        setup = json.loads((ROOT / "data" / "setup_classic.json").read_text())
-        st = {"round": 0, "turn": "setup", "phase": "setup",
-              "ipcs": setup["ipcs"], "owners": setup["owners"],
-              "units": setup["units"], "tech": {}, "eliminated": []}
-        return S.summary_for_ai(st)
-    path = ROOT / config.STATE_FILE
-    if not path.exists():
-        sys.exit(f"no game state at {path} — use --setup for a fresh board")
-    return S.summary_for_ai(S.load(path))
+def _norm(s):
+    return "".join(c for c in s.lower() if c.isalnum() or c == " ").strip()
+
+
+def _match_territory(name):
+    """Map the model's territory string to a board name ('Karelia' ->
+    'Karelia S.S.R.'). None if nothing plausible matches."""
+    n = _norm(name)
+    if not n:
+        return None
+    by_norm = {_norm(t): t for t in S.TERR}
+    if n in by_norm:
+        return by_norm[n]
+    hits = [t for k, t in by_norm.items() if n in k or k in n]
+    return hits[0] if len(hits) == 1 else None
+
+
+POWER_ALIASES = {"germany": "germany", "german": "germany", "japan": "japan",
+                 "japanese": "japan", "uk": "uk", "britain": "uk",
+                 "british": "uk", "united kingdom": "uk", "ussr": "ussr",
+                 "soviet": "ussr", "soviet union": "ussr", "russia": "ussr",
+                 "usa": "usa", "us": "usa", "united states": "usa",
+                 "america": "usa", "american": "usa"}
+
+
+def _match_power(name):
+    return POWER_ALIASES.get(_norm(name), _norm(name))
 
 
 def ask_vision(images, prompt):
@@ -160,7 +176,7 @@ def ask_vision(images, prompt):
                         {"url": f"data:image/jpeg;base64,{b64}"}})
     body = json.dumps({
         "model": getattr(config, "VISION_MODEL", "frontier-or"),
-        "max_tokens": 2000,
+        "max_tokens": 4000,
         "messages": [{"role": "user", "content": content}],
     }).encode()
     req = urllib.request.Request(
@@ -176,7 +192,11 @@ def main():
     count = int(args[args.index("--count") + 1]) if "--count" in args else 3
     if "--wait" in args:
         wait_for_new(count)
-    if "--airdrop" in args:
+    if "--reuse" in args:  # re-run the analysis on already-fetched photos
+        photos = sorted(Path(args[args.index("--reuse") + 1]).glob("*.jpg"))
+        if not photos:
+            sys.exit("no jpgs in the --reuse directory")
+    elif "--airdrop" in args:
         photos = fetch_from_folder(count, folder="Downloads")
     elif "--folder" in args:
         photos = fetch_from_folder(count)
@@ -191,39 +211,134 @@ def main():
                   f"see (type, count, owning power). Then say which parts of "
                   f"the board you cannot read and what additional photos "
                   f"would help.")
-    else:
-        prompt = (f"These are photos of a physical classic Axis & Allies "
-                  f"board mid-game. {PIECE_COLORS}\n\nThe game engine "
-                  f"believes the board is:\n{board_text('--setup' in args)}\n\n"
-                  f"Compare the photos against the engine's state. Report:\n"
-                  f"1. DISCREPANCIES — territories where the photos clearly "
-                  f"contradict the engine (wrong units, counts, or owner). "
-                  f"Only report what you can see clearly.\n"
-                  f"2. UNREADABLE — board areas the photos don't show or are "
-                  f"too blurry/far to count.\n"
-                  f"3. VERDICT — one spoken sentence: either 'board matches' "
-                  f"or the most important mismatch to fix.\n"
-                  f"Be conservative: a stack you can't count is UNREADABLE, "
-                  f"not a discrepancy.")
+        print("asking the vision model...")
+        answer = ask_vision(photos, prompt)
+        print("\n" + answer + "\n")
+        (photos[0].parent / "verdict.md").write_text(answer + "\n")
+        Table().speak("Photo description done. Report is in the viewer.")
+        return
 
-    print("asking the vision model...")
+    # Stage 1 — BLIND inventory. The model never sees the engine state, so
+    # it cannot pattern-complete a checklist into false confirmations.
+    prompt = (
+        f"These are photos of a physical classic Axis & Allies board. "
+        f"{PIECE_COLORS}\n\n"
+        f"Inventory ONLY what you can positively see. For every territory "
+        f"or sea zone you can identify by its printed name, list the units "
+        f"physically present. Do NOT use knowledge of Axis & Allies setups "
+        f"to fill in what 'should' be there — unseen is unseen. If you "
+        f"cannot read a territory's name or attribute its pieces, skip it.\n"
+        f"Unit types: infantry, armour, fighter, bomber, aaGun, factory, "
+        f"transport, submarine, carrier, battleship.\n"
+        f"Counting: count = plastic figures PLUS chips under them (each "
+        f"white/gray chip +1, each red chip +5). If a piece stands on chips "
+        f"you cannot clearly count, report count as your best estimate and "
+        f"countable: false. Ships belong to sea zones, not the island or "
+        f"coast they sit near — if you can't read the sea zone name, skip "
+        f"the ship.\n"
+        f"IMPORTANT — inset boxes: the small labeled boxes along the board "
+        f"edges are zoom areas for crowded territories (Germany, United "
+        f"Kingdom, Japan, Eastern US, Western US, etc.). This table places "
+        f"factories, AA guns, and sometimes other units IN those boxes. "
+        f"Units in an inset box belong to the territory printed on the box "
+        f"— report them under that territory's name, merged with any units "
+        f"on the territory itself.\n"
+        f"Reply with ONLY a JSON object, no prose:\n"
+        f'{{"observations": [{{"territory": "<printed name>", '
+        f'"power": "<germany|japan|uk|ussr|usa>", '
+        f'"units": [{{"type": "<unit>", "count": <n>, '
+        f'"countable": <true if you could count pieces/chips, else false>}}]'
+        f"}}]}}")
+    print("asking the vision model for a blind inventory...")
     answer = ask_vision(photos, prompt)
-    print("\n" + answer + "\n")
-    (photos[0].parent / "verdict.md").write_text(answer + "\n")
+    try:
+        from players import repair
+        observed = repair.parse(answer).get("observations", [])
+    except Exception:
+        sys.exit(f"could not parse the inventory:\n{answer[:500]}")
 
-    table = Table()
-    spoken = "Photo check complete. Read the report on screen."
-    lines = answer.splitlines()
-    for i, line in enumerate(lines):
-        bare = line.strip().strip("*#").strip()
-        if bare.upper().startswith(("VERDICT", "3. VERDICT")):
-            after = bare.split(":", 1)[-1].strip() if ":" in bare else ""
-            if not after:  # verdict text on the following line(s)
-                after = next((l.strip() for l in lines[i + 1:] if l.strip()), "")
-            if after:
-                spoken = after
-            break
-    table.speak(f"Photo verification: {spoken}")
+    # Stage 2 — deterministic diff against the engine. No model judgement.
+    engine = (json.loads((ROOT / "data" / "setup_classic.json").read_text())
+              ["units"] if "--setup" in args
+              else S.load(ROOT / config.STATE_FILE)["units"])
+    seen = {}
+    for o in observed:
+        terr = _match_territory(o.get("territory", ""))
+        if terr:
+            slot = seen.setdefault(terr, {}).setdefault(
+                _match_power(o.get("power", "")), {})
+            for u in o.get("units", []):
+                if u.get("type") in S.STATS or u.get("type") == "factory":
+                    slot[u["type"]] = {"count": u.get("count", 0),
+                                       "countable": bool(u.get("countable"))}
+    def in_adjacent_sea(terr, power, utype):
+        for adj in S.TERR[terr]["adjacent"]:
+            if S.TERR[adj]["water"] and \
+                    engine.get(adj, {}).get(power, {}).get(utype):
+                return True
+        return False
+
+    missing, extra, count_off, color_checks, unseen_terr = [], [], [], [], []
+    for terr, by_power in sorted(engine.items()):
+        if terr not in seen:
+            unseen_terr.append(terr)
+            continue
+        for power, units in by_power.items():
+            obs = seen[terr].get(power, {})
+            for utype, n in units.items():
+                if utype not in obs:
+                    others = [p for p, us in seen[terr].items()
+                              if p != power and utype in us]
+                    if others:  # probably the same piece, color misread
+                        color_checks.append(
+                            f"{terr}: a {utype} read as {others[0]} — engine "
+                            f"says it should be {power}; check the color")
+                    else:
+                        missing.append(f"{terr}: {power} {utype} not seen")
+                elif obs[utype]["countable"] and obs[utype]["count"] != n:
+                    count_off.append(f"{terr}: {power} {utype} — engine says "
+                                     f"{n}, photos show {obs[utype]['count']}")
+    for terr, by_power in seen.items():
+        for power, units in by_power.items():
+            expected = engine.get(terr, {}).get(power, {})
+            for utype in units:
+                if utype in expected:
+                    continue
+                if utype in S.SEA_UNITS and not S.TERR[terr]["water"] \
+                        and in_adjacent_sea(terr, power, utype):
+                    continue  # ship attributed to the coast it sits near
+                if any(utype in engine.get(terr, {}).get(p, {})
+                       for p in engine.get(terr, {})):
+                    continue  # color misread, already in color_checks
+                extra.append(f"{terr}: {power} {utype} seen but not in "
+                             f"the engine")
+
+    report = ["# Photo check — " + time.strftime("%H:%M"),
+              f"photos: {len(photos)} | territories read: {len(seen)} | "
+              f"occupied territories not visible: {len(unseen_terr)}", ""]
+    for title, rows in (("MISSING (in engine, not in photos)", missing),
+                        ("EXTRA (in photos, not in engine)", extra),
+                        ("COUNT MISMATCHES", count_off),
+                        ("COLOR CHECKS (piece there, owner unclear)",
+                         color_checks)):
+        report.append(f"## {title}")
+        report += [f"- {r}" for r in rows] or ["- none"]
+        report.append("")
+    report.append("## Not visible in these photos")
+    report.append(", ".join(unseen_terr) or "everything was visible")
+    text = "\n".join(report)
+    print("\n" + text + "\n")
+    (photos[0].parent / "verdict.md").write_text(
+        text + "\n\n## Raw inventory\n" + answer + "\n")
+
+    problems = len(missing) + len(extra) + len(count_off)
+    if problems:
+        spoken = (f"{problems} problems. " +
+                  ". ".join((missing + extra + count_off)[:3]))
+    else:
+        spoken = (f"No discrepancies in the {len(seen)} territories I could "
+                  f"read. {len(unseen_terr)} territories were not visible.")
+    Table().speak(f"Photo verification: {spoken}")
 
 
 if __name__ == "__main__":

@@ -39,6 +39,15 @@ class Table:
             flags += ["-v", voice]
         return flags + [text]
 
+    def note(self, text):
+        """Transcript + log + screen, but silent — for per-phase reasoning
+        so the table isn't speechified six times per turn."""
+        print(f"  ▸ {text}")
+        with self.transcript.open("a") as f:
+            f.write(text + "\n\n")
+        if self.on_speak:
+            self.on_speak(text)
+
     def speak(self, text, voice=None):
         print(f"  ▸ {text}")
         with self.transcript.open("a") as f:

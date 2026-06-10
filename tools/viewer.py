@@ -25,14 +25,68 @@ HTML_PATH = Path(__file__).resolve().parent / "viewer.html"
 MAX_HISTORY = 60         # most recent messages per power sent to the browser
 
 
+def _pretty(content):
+    """Turn a raw JSON decision into table-readable text."""
+    try:
+        d = json.loads(content)
+    except (json.JSONDecodeError, TypeError):
+        return content
+    if not isinstance(d, dict):
+        return content
+    parts = []
+    if d.get("assessment"):
+        parts.append(d["assessment"])
+    if d.get("reasoning"):
+        parts.append(d["reasoning"])
+    for p in d.get("purchases", []):
+        parts.append(f"🛒 buy {p.get('quantity')} {p.get('unit')}")
+    if d.get("research_dice"):
+        parts.append(f"🧪 {d['research_dice']} research dice")
+    for m in d.get("moves", []):
+        us = ", ".join(f"{u.get('count')} {u.get('type')}"
+                       for u in m.get("units", []))
+        parts.append(f"➡️ {us}: {m.get('from')} → {m.get('to')}")
+    for p in d.get("placements", []):
+        parts.append(f"📦 place {p.get('unit')} in {p.get('territory')}")
+    if d.get("remove"):
+        parts.append("💀 casualties: " + ", ".join(
+            f"{c.get('count')} {c.get('type')}" for c in d["remove"]))
+    if d.get("action"):
+        retreat = f" to {d['retreat_to']}" if d.get("retreat_to") else ""
+        parts.append(f"⚔️ {d['action']}{retreat}")
+    if d.get("note_to_allies"):
+        parts.append(f"✉️ to allies: {d['note_to_allies']}")
+    return "\n".join(parts) or content
+
+
 def _mind(power):
     path = ROOT / Path(config.STATE_FILE).parent / "minds" / f"{power}.json"
     if not path.exists():
         return []
     try:
-        return json.loads(path.read_text()).get("history", [])
+        history = json.loads(path.read_text()).get("history", [])
     except (json.JSONDecodeError, OSError):
         return []
+    return [{"role": m.get("role"),
+             "content": (_pretty(m.get("content", ""))
+                         if m.get("role") == "assistant"
+                         else m.get("content", ""))}
+            for m in history]
+
+
+def _photo_report():
+    """Latest photo-check verdict, for the viewer's Photo Check panel."""
+    photo_root = ROOT / Path(config.STATE_FILE).parent / "photos"
+    if not photo_root.exists():
+        return None
+    runs = sorted((d for d in photo_root.iterdir() if d.is_dir()),
+                  reverse=True)
+    for run in runs:
+        v = run / "verdict.md"
+        if v.exists():
+            text = v.read_text().split("## Raw inventory")[0].strip()
+            return {"when": run.name, "text": text}
+    return None
 
 
 def _transcript_tail(n=80):
@@ -105,6 +159,7 @@ def payload():
         "econ_threshold": (config.ECON_VICTORY_AXIS_INCOME
                            if config.ECONOMIC_VICTORY else None),
         "transcript": _transcript_tail(),
+        "photo_report": _photo_report(),
     }
 
 

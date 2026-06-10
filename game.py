@@ -184,7 +184,7 @@ def run_turn(state, players, table, power, glog):
                  f"IPCs. Unit costs are in your briefing. Research dice cost 5.",
                  PURCHASE_SCHEMA, getattr(player, "purchases", None), glog)
     if d.get("reasoning"):
-        table.speak(d["reasoning"])
+        table.note(d["reasoning"])
     cost = sum(S.STATS[p["unit"]]["cost"] * p["quantity"]
                for p in d.get("purchases", []) if p["unit"] in S.STATS)
     research = max(0, int(d.get("research_dice", 0))) if config.WEAPONS_DEVELOPMENT else 0
@@ -216,7 +216,7 @@ def run_turn(state, players, table, power, glog):
                  f"into enemy territory). Empty moves list = no attacks.",
                  MOVES_SCHEMA, getattr(player, "combat_moves", None), glog)
     if d.get("reasoning"):
-        table.speak(d["reasoning"])
+        table.note(d["reasoning"])
     apply_moves(state, table, power, d, combat_allowed=True)
 
     state["phase"] = "combat"
@@ -235,7 +235,7 @@ def run_turn(state, players, table, power, glog):
                  f"moves into hostile territory.",
                  MOVES_SCHEMA, getattr(player, "noncombat_moves", None), glog)
     if d.get("reasoning"):
-        table.speak(d["reasoning"])
+        table.note(d["reasoning"])
     apply_moves(state, table, power, d, combat_allowed=False)
 
     # 5. Mobilize
@@ -271,7 +271,7 @@ def run_turn(state, players, table, power, glog):
             table.speak(f"Placement bounced: {desc} in {terr}.")
         council.record(state, power, d.get("note_to_allies", ""))
         if d.get("reasoning"):
-            table.speak(d["reasoning"])
+            table.note(d["reasoning"])
         state["purchased_pending"][power] = {u: n for u, n in pend.items() if n > 0}
 
     # 6. Income
