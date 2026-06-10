@@ -1,0 +1,425 @@
+{
+ "factories": [
+  "East US",
+  "Germany",
+  "Japan",
+  "Karelia S.S.R.",
+  "Russia",
+  "South Europe",
+  "United Kingdom",
+  "West US"
+ ],
+ "ipcs": {
+  "germany": 32,
+  "japan": 25,
+  "uk": 30,
+  "usa": 36,
+  "ussr": 24
+ },
+ "owners": {
+  "Alaska": "usa",
+  "Algeria": "germany",
+  "Anglo Sudan Egypt": "uk",
+  "Australia": "uk",
+  "Borneo Celebes": "japan",
+  "Brazil": "usa",
+  "Caroline Islands": "japan",
+  "Caucasus": "ussr",
+  "China": "usa",
+  "Congo": "uk",
+  "Cuba": "usa",
+  "East Canada": "uk",
+  "East Europe": "germany",
+  "East Indies": "japan",
+  "East US": "usa",
+  "Evenki National Okrug": "ussr",
+  "Finland Norway": "germany",
+  "French Equatorial Africa": "uk",
+  "French Indo China": "japan",
+  "French West Africa": "uk",
+  "Germany": "germany",
+  "Gibraltar": "uk",
+  "Hawaiian Islands": "usa",
+  "India": "uk",
+  "Italian East Africa": "uk",
+  "Japan": "japan",
+  "Karelia S.S.R.": "ussr",
+  "Kazakh S.S.R.": "ussr",
+  "Kenya-Rhodesia": "uk",
+  "Kwangtung": "japan",
+  "Libya": "germany",
+  "Madagascar": "uk",
+  "Manchuria": "japan",
+  "Mexico": "usa",
+  "Midway": "usa",
+  "New Guinea": "japan",
+  "New Zealand": "uk",
+  "Novosibirsk": "ussr",
+  "Okinawa": "japan",
+  "Panama": "usa",
+  "Persia": "uk",
+  "Philippines": "japan",
+  "Russia": "ussr",
+  "Sinkiang": "usa",
+  "Solomon Islands": "japan",
+  "South Africa": "uk",
+  "South Europe": "germany",
+  "Soviet Far East": "ussr",
+  "Syria Jordan": "uk",
+  "Ukraine S.S.R.": "germany",
+  "United Kingdom": "uk",
+  "Wake Island": "japan",
+  "West Canada": "uk",
+  "West Europe": "germany",
+  "West US": "usa",
+  "Yakut S.S.R.": "ussr"
+ },
+ "units": {
+  "Alaska": {
+   "usa": {
+    "infantry": 1
+   }
+  },
+  "Algeria": {
+   "germany": {
+    "infantry": 1
+   }
+  },
+  "Anglo Sudan Egypt": {
+   "uk": {
+    "armour": 1,
+    "infantry": 1
+   }
+  },
+  "Australia": {
+   "uk": {
+    "infantry": 2
+   }
+  },
+  "Baltic Sea Zone": {
+   "germany": {
+    "submarine": 1,
+    "transport": 1
+   }
+  },
+  "Borneo Celebes": {
+   "japan": {
+    "infantry": 1
+   }
+  },
+  "Caroline Islands": {
+   "japan": {
+    "infantry": 1
+   }
+  },
+  "Caroline Islands Sea Zone": {
+   "japan": {
+    "battleship": 1,
+    "carrier": 1,
+    "fighter": 1
+   }
+  },
+  "Caucasus": {
+   "ussr": {
+    "infantry": 5
+   }
+  },
+  "Central Mediteranean Sea Zone": {
+   "germany": {
+    "battleship": 1,
+    "transport": 1
+   }
+  },
+  "China": {
+   "usa": {
+    "fighter": 1,
+    "infantry": 2
+   }
+  },
+  "East Canada": {
+   "uk": {
+    "armour": 1
+   }
+  },
+  "East Canada Sea Zone": {
+   "uk": {
+    "transport": 1
+   }
+  },
+  "East Europe": {
+   "germany": {
+    "armour": 1,
+    "fighter": 1,
+    "infantry": 3
+   }
+  },
+  "East Indies": {
+   "japan": {
+    "infantry": 1
+   }
+  },
+  "East Mediteranean Sea Zone": {
+   "uk": {
+    "submarine": 1
+   }
+  },
+  "East US": {
+   "usa": {
+    "aaGun": 1,
+    "armour": 1,
+    "bomber": 1,
+    "factory": 1,
+    "fighter": 1,
+    "infantry": 2
+   }
+  },
+  "East US Sea Zone": {
+   "usa": {
+    "transport": 1
+   }
+  },
+  "Evenki National Okrug": {
+   "ussr": {
+    "infantry": 2
+   }
+  },
+  "Finland Norway": {
+   "germany": {
+    "armour": 1,
+    "fighter": 1,
+    "infantry": 3
+   }
+  },
+  "French Indo China": {
+   "japan": {
+    "fighter": 1,
+    "infantry": 2
+   }
+  },
+  "Germany": {
+   "germany": {
+    "aaGun": 1,
+    "armour": 2,
+    "bomber": 1,
+    "factory": 1,
+    "fighter": 1,
+    "infantry": 4
+   }
+  },
+  "Hawaii Sea Zone": {
+   "usa": {
+    "carrier": 1,
+    "fighter": 1,
+    "submarine": 1
+   }
+  },
+  "Hawaiian Islands": {
+   "usa": {
+    "infantry": 1
+   }
+  },
+  "India": {
+   "uk": {
+    "fighter": 1,
+    "infantry": 2
+   }
+  },
+  "Indian Ocean Sea Zone": {
+   "uk": {
+    "transport": 1
+   }
+  },
+  "Japan": {
+   "japan": {
+    "aaGun": 1,
+    "armour": 1,
+    "bomber": 1,
+    "factory": 1,
+    "fighter": 1,
+    "infantry": 3
+   }
+  },
+  "Japan Sea Zone": {
+   "japan": {
+    "battleship": 1,
+    "transport": 1
+   }
+  },
+  "Karelia S.S.R.": {
+   "ussr": {
+    "aaGun": 1,
+    "armour": 1,
+    "factory": 1,
+    "fighter": 1,
+    "infantry": 3
+   }
+  },
+  "Karelia Sea Zone": {
+   "ussr": {
+    "submarine": 1,
+    "transport": 1
+   }
+  },
+  "Kwangtung": {
+   "japan": {
+    "infantry": 2
+   }
+  },
+  "Libya": {
+   "germany": {
+    "armour": 1,
+    "infantry": 1
+   }
+  },
+  "Manchuria": {
+   "japan": {
+    "fighter": 1,
+    "infantry": 3
+   }
+  },
+  "Midway": {
+   "usa": {
+    "infantry": 1
+   }
+  },
+  "New Guinea": {
+   "japan": {
+    "infantry": 1
+   }
+  },
+  "North Sea Zone": {
+   "uk": {
+    "battleship": 1,
+    "transport": 1
+   }
+  },
+  "Okinawa": {
+   "japan": {
+    "infantry": 1
+   }
+  },
+  "Philippines": {
+   "japan": {
+    "fighter": 1,
+    "infantry": 2
+   }
+  },
+  "Philippines Sea Zone": {
+   "japan": {
+    "transport": 1
+   }
+  },
+  "Russia": {
+   "ussr": {
+    "aaGun": 1,
+    "armour": 2,
+    "factory": 1,
+    "fighter": 1,
+    "infantry": 4
+   }
+  },
+  "Sinkiang": {
+   "usa": {
+    "infantry": 2
+   }
+  },
+  "Solomon Islands": {
+   "japan": {
+    "infantry": 1
+   }
+  },
+  "Solomon Islands Sea Zone": {
+   "japan": {
+    "submarine": 1
+   }
+  },
+  "South Africa": {
+   "uk": {
+    "infantry": 1
+   }
+  },
+  "South Europe": {
+   "germany": {
+    "aaGun": 1,
+    "armour": 1,
+    "factory": 1,
+    "infantry": 2
+   }
+  },
+  "Soviet Far East": {
+   "ussr": {
+    "armour": 1,
+    "infantry": 2
+   }
+  },
+  "Syria Jordan": {
+   "uk": {
+    "infantry": 1
+   }
+  },
+  "Ukraine S.S.R.": {
+   "germany": {
+    "armour": 2,
+    "fighter": 1,
+    "infantry": 3
+   }
+  },
+  "United Kingdom": {
+   "uk": {
+    "aaGun": 1,
+    "armour": 1,
+    "bomber": 1,
+    "factory": 1,
+    "fighter": 2,
+    "infantry": 2
+   }
+  },
+  "Wake Island": {
+   "japan": {
+    "infantry": 1
+   }
+  },
+  "West Canada": {
+   "uk": {
+    "infantry": 1
+   }
+  },
+  "West Europe": {
+   "germany": {
+    "aaGun": 1,
+    "armour": 2,
+    "fighter": 1,
+    "infantry": 2
+   }
+  },
+  "West Mediteranean Sea Zone": {
+   "uk": {
+    "battleship": 1
+   }
+  },
+  "West Spain Sea Zone": {
+   "germany": {
+    "submarine": 1
+   }
+  },
+  "West US": {
+   "usa": {
+    "aaGun": 1,
+    "factory": 1,
+    "fighter": 1,
+    "infantry": 2
+   }
+  },
+  "West US Sea Zone": {
+   "usa": {
+    "battleship": 1,
+    "transport": 1
+   }
+  },
+  "Yakut S.S.R.": {
+   "ussr": {
+    "infantry": 3
+   }
+  }
+ }
+}

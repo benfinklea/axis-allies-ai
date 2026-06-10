@@ -1,0 +1,1556 @@
+{
+ "capitals": {
+  "germany": "Germany",
+  "japan": "Japan",
+  "uk": "United Kingdom",
+  "usa": "East US",
+  "ussr": "Russia"
+ },
+ "sides": {
+  "germany": "axis",
+  "japan": "axis",
+  "uk": "allies",
+  "usa": "allies",
+  "ussr": "allies"
+ },
+ "source": "TripleA world_war_ii_classic classic.xml (2nd edition)",
+ "territories": {
+  "Afghanistan": {
+   "adjacent": [
+    "Kazakh S.S.R.",
+    "Persia",
+    "India",
+    "Sinkiang"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Alaska": {
+   "adjacent": [
+    "Alaska Sea Zone",
+    "West Canada Sea Zone",
+    "West Canada"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Alaska Sea Zone": {
+   "adjacent": [
+    "Soviet Far East Sea Zone",
+    "Alaska",
+    "West Canada Sea Zone",
+    "North Pacific Sea Zone",
+    "Midway Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Algeria": {
+   "adjacent": [
+    "West Spain Sea Zone",
+    "French West Africa",
+    "West Mediteranean Sea Zone",
+    "Libya",
+    "French Equatorial Africa"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Anglo Sudan Egypt": {
+   "adjacent": [
+    "Libya",
+    "East Mediteranean Sea Zone",
+    "Red Sea Zone",
+    "Italian East Africa",
+    "French Equatorial Africa",
+    "Congo",
+    "Kenya-Rhodesia",
+    "Syria Jordan"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Angola": {
+   "adjacent": [
+    "Angola Sea Zone",
+    "Congo",
+    "Kenya-Rhodesia",
+    "South Africa"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Angola Sea Zone": {
+   "adjacent": [
+    "Congo Sea Zone",
+    "South Atlantic Sea Zone",
+    "South Africa",
+    "South Africa Sea Zone",
+    "Angola",
+    "Antartic Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Antartic Sea Zone": {
+   "adjacent": [
+    "South Argentina Sea Zone",
+    "South Atlantic Sea Zone",
+    "Angola Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Argentina-Chile": {
+   "adjacent": [
+    "Peru",
+    "Peru Sea Zone",
+    "Brazil",
+    "East Argentina Sea Zone",
+    "South Argentina Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Australia": {
+   "adjacent": [
+    "West Australia Sea Zone",
+    "South Australia Sea Zone",
+    "North Australia Sea Zone"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Baltic Sea Zone": {
+   "adjacent": [
+    "North Sea Zone",
+    "West Europe",
+    "Karelia S.S.R.",
+    "Germany",
+    "Sweden",
+    "East Europe",
+    "Finland Norway"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Black Sea Zone": {
+   "adjacent": [
+    "Central Mediteranean Sea Zone",
+    "Turkey",
+    "Caucasus",
+    "East Europe",
+    "Ukraine S.S.R.",
+    "East Mediteranean Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Borneo Celebes": {
+   "adjacent": [
+    "Borneo Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Borneo Sea Zone": {
+   "adjacent": [
+    "North Australia Sea Zone",
+    "Borneo Celebes",
+    "Philippines Sea Zone",
+    "French Indo China Sea Zone",
+    "Caroline Islands Sea Zone",
+    "East Indies Sea Zone",
+    "New Guinea Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Brazil": {
+   "adjacent": [
+    "Peru",
+    "Columbia",
+    "Argentina-Chile",
+    "South Brazil Sea Zone",
+    "North Brazil Sea Zone"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "Caroline Islands": {
+   "adjacent": [
+    "Caroline Islands Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Caroline Islands Sea Zone": {
+   "adjacent": [
+    "Solomon Islands Sea Zone",
+    "Wake Island Sea Zone",
+    "Okinawa Sea Zone",
+    "Philippines Sea Zone",
+    "Borneo Sea Zone",
+    "New Guinea Sea Zone",
+    "Caroline Islands"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Carribean Sea Zone": {
+   "adjacent": [
+    "Gulf of Mexico Sea Zone",
+    "East US Sea Zone",
+    "North Atlantic Sea Zone",
+    "North Brazil Sea Zone",
+    "Columbia",
+    "Panama",
+    "Cuba",
+    "West Panama Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Caspian Sea Zone": {
+   "adjacent": [
+    "Caucasus",
+    "Kazakh S.S.R.",
+    "Persia",
+    "Russia"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Caucasus": {
+   "adjacent": [
+    "Black Sea Zone",
+    "Caspian Sea Zone",
+    "Ukraine S.S.R.",
+    "Karelia S.S.R.",
+    "Russia",
+    "Persia",
+    "Turkey"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "Central Mediteranean Sea Zone": {
+   "adjacent": [
+    "Libya",
+    "South Europe",
+    "West Mediteranean Sea Zone",
+    "East Mediteranean Sea Zone",
+    "Black Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "China": {
+   "adjacent": [
+    "Mongolia",
+    "Sinkiang",
+    "French Indo China",
+    "Manchuria",
+    "Kwangtung"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Columbia": {
+   "adjacent": [
+    "Carribean Sea Zone",
+    "Panama",
+    "West Panama Sea Zone",
+    "Peru",
+    "Brazil"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Congo": {
+   "adjacent": [
+    "Congo Sea Zone",
+    "Anglo Sudan Egypt",
+    "French Equatorial Africa",
+    "Angola",
+    "Kenya-Rhodesia"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Congo Sea Zone": {
+   "adjacent": [
+    "South Brazil Sea Zone",
+    "West Africa Sea Zone",
+    "South Atlantic Sea Zone",
+    "South Brazil Sea Zone",
+    "French Equatorial Africa",
+    "Congo",
+    "Angola Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Cuba": {
+   "adjacent": [
+    "Carribean Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "East Argentina Sea Zone": {
+   "adjacent": [
+    "Argentina-Chile",
+    "South Argentina Sea Zone",
+    "South Atlantic Sea Zone",
+    "South Brazil Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "East Canada": {
+   "adjacent": [
+    "East Canada Sea Zone",
+    "East US",
+    "West Canada"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "East Canada Sea Zone": {
+   "adjacent": [
+    "West Canada",
+    "East Canada",
+    "North Sea Zone",
+    "West Spain Sea Zone",
+    "North Atlantic Sea Zone",
+    "East US Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "East Compass Sea Zone": {
+   "adjacent": [
+    "West Compass Sea Zone",
+    "Indian Ocean Sea Zone",
+    "South Compass Sea Zone",
+    "South Australia Sea Zone",
+    "West Australia Sea Zone",
+    "East Indies Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "East Europe": {
+   "adjacent": [
+    "Germany",
+    "Baltic Sea Zone",
+    "South Europe",
+    "Black Sea Zone",
+    "Ukraine S.S.R.",
+    "Karelia S.S.R."
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "East Indies": {
+   "adjacent": [
+    "East Indies Sea Zone"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "East Indies Sea Zone": {
+   "adjacent": [
+    "East Compass Sea Zone",
+    "French Indo China Sea Zone",
+    "Indian Ocean Sea Zone",
+    "West Australia Sea Zone",
+    "East Indies",
+    "North Australia Sea Zone",
+    "Borneo Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "East Mediteranean Sea Zone": {
+   "adjacent": [
+    "Anglo Sudan Egypt",
+    "Central Mediteranean Sea Zone",
+    "Syria Jordan",
+    "Turkey",
+    "Black Sea Zone",
+    "Red Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "East Pacific Sea Zone": {
+   "adjacent": [
+    "New Zealand Sea Zone",
+    "South Pacific Sea Zone",
+    "Mexico Sea Zone",
+    "Peru Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "East US": {
+   "adjacent": [
+    "East Canada",
+    "East US Sea Zone",
+    "West US"
+   ],
+   "ipc_value": 12,
+   "water": false
+  },
+  "East US Sea Zone": {
+   "adjacent": [
+    "Gulf of Mexico Sea Zone",
+    "East Canada Sea Zone",
+    "East US",
+    "Carribean Sea Zone",
+    "North Atlantic Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Eire": {
+   "adjacent": [
+    "North Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Evenki National Okrug": {
+   "adjacent": [
+    "Russia",
+    "Yakut S.S.R.",
+    "Novosibirsk"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Finland Norway": {
+   "adjacent": [
+    "North Sea Zone",
+    "Sweden",
+    "Karelia S.S.R.",
+    "Baltic Sea Zone"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "French Equatorial Africa": {
+   "adjacent": [
+    "Congo Sea Zone",
+    "French West Africa",
+    "Algeria",
+    "Libya",
+    "Anglo Sudan Egypt",
+    "Congo"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "French Indo China": {
+   "adjacent": [
+    "Sinkiang",
+    "China",
+    "India",
+    "Kwangtung",
+    "French Indo China Sea Zone"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "French Indo China Sea Zone": {
+   "adjacent": [
+    "French Indo China",
+    "East Indies Sea Zone",
+    "Indian Ocean Sea Zone",
+    "Philippines Sea Zone",
+    "Borneo Sea Zone",
+    "Kwangtung Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "French West Africa": {
+   "adjacent": [
+    "West Africa Sea Zone",
+    "Rio del Oro",
+    "Algeria",
+    "French Equatorial Africa"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Germany": {
+   "adjacent": [
+    "Switzerland",
+    "West Europe",
+    "Baltic Sea Zone",
+    "South Europe",
+    "East Europe"
+   ],
+   "ipc_value": 10,
+   "water": false
+  },
+  "Gibraltar": {
+   "adjacent": [
+    "West Mediteranean Sea Zone",
+    "Spain"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Gulf of Mexico Sea Zone": {
+   "adjacent": [
+    "West US",
+    "Mexico",
+    "East US Sea Zone",
+    "Carribean Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Hawaii Sea Zone": {
+   "adjacent": [
+    "South Pacific Sea Zone",
+    "Hawaiian Islands",
+    "Midway Sea Zone",
+    "West US Sea Zone",
+    "Mexico Sea Zone",
+    "North Pacific Sea Zone",
+    "Wake Island Sea Zone",
+    "Solomon Islands Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Hawaiian Islands": {
+   "adjacent": [
+    "Hawaii Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "India": {
+   "adjacent": [
+    "Afghanistan",
+    "Sinkiang",
+    "Indian Ocean Sea Zone",
+    "French Indo China",
+    "Persia"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "Indian Ocean Sea Zone": {
+   "adjacent": [
+    "India",
+    "Red Sea Zone",
+    "West Compass Sea Zone",
+    "East Compass Sea Zone",
+    "French Indo China Sea Zone",
+    "East Indies Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Italian East Africa": {
+   "adjacent": [
+    "Anglo Sudan Egypt",
+    "Kenya-Rhodesia",
+    "Red Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Japan": {
+   "adjacent": [
+    "Japan Sea Zone"
+   ],
+   "ipc_value": 8,
+   "water": false
+  },
+  "Japan Sea Zone": {
+   "adjacent": [
+    "Manchuria",
+    "Japan",
+    "Soviet Far East Sea Zone",
+    "North Pacific Sea Zone",
+    "Okinawa Sea Zone",
+    "Philippines Sea Zone",
+    "Kwangtung Sea Zone",
+    "Wake Island Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Karelia S.S.R.": {
+   "adjacent": [
+    "Baltic Sea Zone",
+    "Finland Norway",
+    "Karelia Sea Zone",
+    "East Europe",
+    "Ukraine S.S.R.",
+    "Caucasus",
+    "Russia"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "Karelia Sea Zone": {
+   "adjacent": [
+    "North Sea Zone",
+    "Karelia S.S.R."
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Kazakh S.S.R.": {
+   "adjacent": [
+    "Caspian Sea Zone",
+    "Russia",
+    "Novosibirsk",
+    "Persia",
+    "Afghanistan",
+    "Sinkiang"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Kenya-Rhodesia": {
+   "adjacent": [
+    "Anglo Sudan Egypt",
+    "Italian East Africa",
+    "Congo",
+    "Angola",
+    "South Africa",
+    "Mozambique",
+    "Mozambique Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Kwangtung": {
+   "adjacent": [
+    "Manchuria",
+    "China",
+    "French Indo China",
+    "Kwangtung Sea Zone"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "Kwangtung Sea Zone": {
+   "adjacent": [
+    "Kwangtung",
+    "Japan Sea Zone",
+    "French Indo China Sea Zone",
+    "Philippines Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Libya": {
+   "adjacent": [
+    "Algeria",
+    "Central Mediteranean Sea Zone",
+    "French Equatorial Africa",
+    "Anglo Sudan Egypt"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Madagascar": {
+   "adjacent": [
+    "South Africa Sea Zone",
+    "South East Madagascar Sea Zone",
+    "West Compass Sea Zone",
+    "Mozambique Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Manchuria": {
+   "adjacent": [
+    "Yakut S.S.R.",
+    "Soviet Far East",
+    "Mongolia",
+    "Japan Sea Zone",
+    "China",
+    "Kwangtung"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "Mexico": {
+   "adjacent": [
+    "Gulf of Mexico Sea Zone",
+    "Mexico Sea Zone",
+    "West US",
+    "Panama"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Mexico Sea Zone": {
+   "adjacent": [
+    "South Pacific Sea Zone",
+    "East Pacific Sea Zone",
+    "Hawaii Sea Zone",
+    "Mexico",
+    "West US Sea Zone",
+    "West Panama Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Midway": {
+   "adjacent": [
+    "Midway Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Midway Sea Zone": {
+   "adjacent": [
+    "Alaska Sea Zone",
+    "Midway",
+    "North Pacific Sea Zone",
+    "Hawaii Sea Zone",
+    "West US Sea Zone",
+    "West Canada Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Mongolia": {
+   "adjacent": [
+    "Yakut S.S.R.",
+    "Novosibirsk",
+    "Sinkiang",
+    "China",
+    "Manchuria"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Mozambique": {
+   "adjacent": [
+    "South Africa",
+    "Kenya-Rhodesia",
+    "Mozambique Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Mozambique Sea Zone": {
+   "adjacent": [
+    "South Africa",
+    "Mozambique",
+    "Kenya-Rhodesia",
+    "Madagascar",
+    "Red Sea Zone",
+    "South Africa Sea Zone",
+    "West Compass Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "New Guinea": {
+   "adjacent": [
+    "New Guinea Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "New Guinea Sea Zone": {
+   "adjacent": [
+    "North Australia Sea Zone",
+    "New Guinea",
+    "Caroline Islands Sea Zone",
+    "Solomon Islands Sea Zone",
+    "Borneo Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "New Zealand": {
+   "adjacent": [
+    "New Zealand Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "New Zealand Sea Zone": {
+   "adjacent": [
+    "South Australia Sea Zone",
+    "North Australia Sea Zone",
+    "New Zealand",
+    "Solomon Islands Sea Zone",
+    "South Pacific Sea Zone",
+    "East Pacific Sea Zone",
+    "South Argentina Sea Zone",
+    "Peru Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "North Atlantic Sea Zone": {
+   "adjacent": [
+    "East Canada Sea Zone",
+    "Carribean Sea Zone",
+    "North Brazil Sea Zone",
+    "West Africa Sea Zone",
+    "West Spain Sea Zone",
+    "East US Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "North Australia Sea Zone": {
+   "adjacent": [
+    "South Australia Sea Zone",
+    "New Zealand Sea Zone",
+    "West Australia Sea Zone",
+    "Solomon Islands Sea Zone",
+    "New Guinea Sea Zone",
+    "Borneo Sea Zone",
+    "Australia",
+    "East Indies Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "North Brazil Sea Zone": {
+   "adjacent": [
+    "Carribean Sea Zone",
+    "Brazil",
+    "South Brazil Sea Zone",
+    "North Atlantic Sea Zone",
+    "West Africa Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "North Pacific Sea Zone": {
+   "adjacent": [
+    "Alaska Sea Zone",
+    "Japan Sea Zone",
+    "Midway Sea Zone",
+    "Wake Island Sea Zone",
+    "Hawaii Sea Zone",
+    "Soviet Far East Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "North Sea Zone": {
+   "adjacent": [
+    "East Canada Sea Zone",
+    "Eire",
+    "United Kingdom",
+    "West Spain Sea Zone",
+    "Karelia Sea Zone",
+    "West Europe",
+    "Finland Norway",
+    "Baltic Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Novosibirsk": {
+   "adjacent": [
+    "Russia",
+    "Evenki National Okrug",
+    "Kazakh S.S.R.",
+    "Mongolia",
+    "Sinkiang",
+    "Yakut S.S.R."
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Okinawa": {
+   "adjacent": [
+    "Okinawa Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Okinawa Sea Zone": {
+   "adjacent": [
+    "Okinawa",
+    "Japan Sea Zone",
+    "Philippines Sea Zone",
+    "Wake Island Sea Zone",
+    "Caroline Islands Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Panama": {
+   "adjacent": [
+    "Carribean Sea Zone",
+    "Columbia",
+    "West Panama Sea Zone",
+    "Mexico"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Persia": {
+   "adjacent": [
+    "Caspian Sea Zone",
+    "Saudi Arabia",
+    "Syria Jordan",
+    "Turkey",
+    "Caucasus",
+    "Kazakh S.S.R.",
+    "Afghanistan",
+    "India",
+    "Red Sea Zone"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Peru": {
+   "adjacent": [
+    "Peru Sea Zone",
+    "Brazil",
+    "Columbia",
+    "Argentina-Chile"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Peru Sea Zone": {
+   "adjacent": [
+    "Peru",
+    "West Panama Sea Zone",
+    "Argentina-Chile",
+    "South Argentina Sea Zone",
+    "East Pacific Sea Zone",
+    "New Zealand Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Philippines": {
+   "adjacent": [
+    "Philippines Sea Zone"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "Philippines Sea Zone": {
+   "adjacent": [
+    "Philippines",
+    "Japan Sea Zone",
+    "Okinawa Sea Zone",
+    "Borneo Sea Zone",
+    "French Indo China Sea Zone",
+    "Kwangtung Sea Zone",
+    "Caroline Islands Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Red Sea Zone": {
+   "adjacent": [
+    "Anglo Sudan Egypt",
+    "Italian East Africa",
+    "East Mediteranean Sea Zone",
+    "Syria Jordan",
+    "Saudi Arabia",
+    "Indian Ocean Sea Zone",
+    "West Compass Sea Zone",
+    "Mozambique Sea Zone",
+    "Persia"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Rio del Oro": {
+   "adjacent": [
+    "West Africa Sea Zone",
+    "French West Africa"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Russia": {
+   "adjacent": [
+    "Caspian Sea Zone",
+    "Caucasus",
+    "Kazakh S.S.R.",
+    "Novosibirsk",
+    "Evenki National Okrug",
+    "Karelia S.S.R."
+   ],
+   "ipc_value": 8,
+   "water": false
+  },
+  "Saudi Arabia": {
+   "adjacent": [
+    "Red Sea Zone",
+    "Syria Jordan",
+    "Persia"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Sinkiang": {
+   "adjacent": [
+    "Kazakh S.S.R.",
+    "Novosibirsk",
+    "Mongolia",
+    "Afghanistan",
+    "India",
+    "China",
+    "French Indo China"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Solomon Islands": {
+   "adjacent": [
+    "Solomon Islands Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Solomon Islands Sea Zone": {
+   "adjacent": [
+    "North Australia Sea Zone",
+    "New Zealand Sea Zone",
+    "South Pacific Sea Zone",
+    "Solomon Islands",
+    "Hawaii Sea Zone",
+    "Caroline Islands Sea Zone",
+    "Wake Island Sea Zone",
+    "New Guinea Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "South Africa": {
+   "adjacent": [
+    "Angola Sea Zone",
+    "Kenya-Rhodesia",
+    "Angola",
+    "Mozambique",
+    "South Africa Sea Zone",
+    "Mozambique Sea Zone"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "South Africa Sea Zone": {
+   "adjacent": [
+    "Angola Sea Zone",
+    "South East Madagascar Sea Zone",
+    "South Africa",
+    "Madagascar",
+    "Mozambique Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "South Argentina Sea Zone": {
+   "adjacent": [
+    "Peru Sea Zone",
+    "Argentina-Chile",
+    "East Argentina Sea Zone",
+    "South Atlantic Sea Zone",
+    "Antartic Sea Zone",
+    "New Zealand Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "South Atlantic Sea Zone": {
+   "adjacent": [
+    "South Argentina Sea Zone",
+    "East Argentina Sea Zone",
+    "South Brazil Sea Zone",
+    "Congo Sea Zone",
+    "Antartic Sea Zone",
+    "Angola Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "South Australia Sea Zone": {
+   "adjacent": [
+    "East Compass Sea Zone",
+    "West Australia Sea Zone",
+    "South Compass Sea Zone",
+    "New Zealand Sea Zone",
+    "North Australia Sea Zone",
+    "Australia"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "South Brazil Sea Zone": {
+   "adjacent": [
+    "East Argentina Sea Zone",
+    "Brazil",
+    "South Atlantic Sea Zone",
+    "West Africa Sea Zone",
+    "Congo Sea Zone",
+    "North Brazil Sea Zone",
+    "Congo Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "South Compass Sea Zone": {
+   "adjacent": [
+    "South East Madagascar Sea Zone",
+    "West Compass Sea Zone",
+    "East Compass Sea Zone",
+    "South Australia Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "South East Madagascar Sea Zone": {
+   "adjacent": [
+    "South Africa Sea Zone",
+    "Madagascar",
+    "West Compass Sea Zone",
+    "South Compass Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "South Europe": {
+   "adjacent": [
+    "Switzerland",
+    "Germany",
+    "Central Mediteranean Sea Zone",
+    "East Europe",
+    "West Europe"
+   ],
+   "ipc_value": 6,
+   "water": false
+  },
+  "South Pacific Sea Zone": {
+   "adjacent": [
+    "New Zealand Sea Zone",
+    "East Pacific Sea Zone",
+    "Solomon Islands Sea Zone",
+    "Hawaii Sea Zone",
+    "Mexico Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Soviet Far East": {
+   "adjacent": [
+    "Yakut S.S.R.",
+    "Soviet Far East Sea Zone",
+    "Manchuria"
+   ],
+   "ipc_value": 2,
+   "water": false
+  },
+  "Soviet Far East Sea Zone": {
+   "adjacent": [
+    "Soviet Far East",
+    "Alaska Sea Zone",
+    "Japan Sea Zone",
+    "North Pacific Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Spain": {
+   "adjacent": [
+    "West Spain Sea Zone",
+    "West Europe",
+    "West Mediteranean Sea Zone",
+    "Gibraltar"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Sweden": {
+   "adjacent": [
+    "Finland Norway",
+    "Baltic Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Switzerland": {
+   "adjacent": [
+    "West Europe",
+    "Germany",
+    "South Europe"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Syria Jordan": {
+   "adjacent": [
+    "East Mediteranean Sea Zone",
+    "Anglo Sudan Egypt",
+    "Red Sea Zone",
+    "Saudi Arabia",
+    "Persia",
+    "Turkey"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "Turkey": {
+   "adjacent": [
+    "East Mediteranean Sea Zone",
+    "Black Sea Zone",
+    "Syria Jordan",
+    "Persia",
+    "Caucasus"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Ukraine S.S.R.": {
+   "adjacent": [
+    "Black Sea Zone",
+    "East Europe",
+    "Karelia S.S.R.",
+    "Caucasus"
+   ],
+   "ipc_value": 3,
+   "water": false
+  },
+  "United Kingdom": {
+   "adjacent": [
+    "North Sea Zone"
+   ],
+   "ipc_value": 8,
+   "water": false
+  },
+  "Wake Island": {
+   "adjacent": [
+    "Wake Island Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": false
+  },
+  "Wake Island Sea Zone": {
+   "adjacent": [
+    "Wake Island",
+    "Okinawa Sea Zone",
+    "Japan Sea Zone",
+    "North Pacific Sea Zone",
+    "Hawaii Sea Zone",
+    "Caroline Islands Sea Zone",
+    "Solomon Islands Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "West Africa Sea Zone": {
+   "adjacent": [
+    "South Brazil Sea Zone",
+    "North Brazil Sea Zone",
+    "North Atlantic Sea Zone",
+    "West Spain Sea Zone",
+    "Rio del Oro",
+    "French West Africa",
+    "Congo Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "West Australia Sea Zone": {
+   "adjacent": [
+    "East Compass Sea Zone",
+    "South Australia Sea Zone",
+    "North Australia Sea Zone",
+    "East Indies Sea Zone",
+    "Australia"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "West Canada": {
+   "adjacent": [
+    "East Canada Sea Zone",
+    "West Canada Sea Zone",
+    "West US",
+    "West US Sea Zone",
+    "East Canada",
+    "Alaska"
+   ],
+   "ipc_value": 1,
+   "water": false
+  },
+  "West Canada Sea Zone": {
+   "adjacent": [
+    "Alaska Sea Zone",
+    "Alaska",
+    "West Canada",
+    "Midway Sea Zone",
+    "West US Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "West Compass Sea Zone": {
+   "adjacent": [
+    "Madagascar",
+    "Red Sea Zone",
+    "South East Madagascar Sea Zone",
+    "Mozambique Sea Zone",
+    "East Compass Sea Zone",
+    "South Compass Sea Zone",
+    "Indian Ocean Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "West Europe": {
+   "adjacent": [
+    "North Sea Zone",
+    "Baltic Sea Zone",
+    "West Spain Sea Zone",
+    "Spain",
+    "West Mediteranean Sea Zone",
+    "Switzerland",
+    "Germany",
+    "South Europe"
+   ],
+   "ipc_value": 6,
+   "water": false
+  },
+  "West Mediteranean Sea Zone": {
+   "adjacent": [
+    "West Spain Sea Zone",
+    "Algeria",
+    "Gibraltar",
+    "Spain",
+    "West Europe",
+    "Central Mediteranean Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "West Panama Sea Zone": {
+   "adjacent": [
+    "Columbia",
+    "Panama",
+    "Peru Sea Zone",
+    "Carribean Sea Zone",
+    "Mexico Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "West Spain Sea Zone": {
+   "adjacent": [
+    "East Canada Sea Zone",
+    "North Atlantic Sea Zone",
+    "North Sea Zone",
+    "West Mediteranean Sea Zone",
+    "Spain",
+    "West Europe",
+    "Algeria",
+    "West Africa Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "West US": {
+   "adjacent": [
+    "Gulf of Mexico Sea Zone",
+    "Mexico",
+    "West Canada",
+    "West US Sea Zone",
+    "East US"
+   ],
+   "ipc_value": 10,
+   "water": false
+  },
+  "West US Sea Zone": {
+   "adjacent": [
+    "Midway Sea Zone",
+    "Hawaii Sea Zone",
+    "West US",
+    "Mexico Sea Zone",
+    "West Canada",
+    "West Canada Sea Zone"
+   ],
+   "ipc_value": 0,
+   "water": true
+  },
+  "Yakut S.S.R.": {
+   "adjacent": [
+    "Evenki National Okrug",
+    "Soviet Far East",
+    "Manchuria",
+    "Mongolia",
+    "Novosibirsk"
+   ],
+   "ipc_value": 2,
+   "water": false
+  }
+ },
+ "turn_order": [
+  "ussr",
+  "germany",
+  "uk",
+  "japan",
+  "usa"
+ ],
+ "unit_stats": {
+  "aaGun": {
+   "attack": 0,
+   "carrier_capacity": -1,
+   "carrier_cost": -1,
+   "cost": 5,
+   "defense": 0,
+   "is_air": false,
+   "is_sea": false,
+   "is_sub": false,
+   "movement": 1,
+   "transport_capacity": -1,
+   "transport_cost": 2,
+   "two_hit": false
+  },
+  "armour": {
+   "attack": 3,
+   "carrier_capacity": -1,
+   "carrier_cost": -1,
+   "cost": 5,
+   "defense": 2,
+   "is_air": false,
+   "is_sea": false,
+   "is_sub": false,
+   "movement": 2,
+   "transport_capacity": -1,
+   "transport_cost": 2,
+   "two_hit": false
+  },
+  "battleship": {
+   "attack": 4,
+   "carrier_capacity": -1,
+   "carrier_cost": -1,
+   "cost": 24,
+   "defense": 4,
+   "is_air": false,
+   "is_sea": true,
+   "is_sub": false,
+   "movement": 2,
+   "transport_capacity": -1,
+   "transport_cost": -1,
+   "two_hit": false
+  },
+  "bomber": {
+   "attack": 4,
+   "carrier_capacity": -1,
+   "carrier_cost": -1,
+   "cost": 15,
+   "defense": 1,
+   "is_air": true,
+   "is_sea": false,
+   "is_sub": false,
+   "movement": 6,
+   "transport_capacity": -1,
+   "transport_cost": -1,
+   "two_hit": false
+  },
+  "carrier": {
+   "attack": 1,
+   "carrier_capacity": 2,
+   "carrier_cost": -1,
+   "cost": 18,
+   "defense": 3,
+   "is_air": false,
+   "is_sea": true,
+   "is_sub": false,
+   "movement": 2,
+   "transport_capacity": -1,
+   "transport_cost": -1,
+   "two_hit": false
+  },
+  "factory": {
+   "attack": 0,
+   "carrier_capacity": -1,
+   "carrier_cost": -1,
+   "cost": 15,
+   "defense": 0,
+   "is_air": false,
+   "is_sea": false,
+   "is_sub": false,
+   "movement": 0,
+   "transport_capacity": -1,
+   "transport_cost": -1,
+   "two_hit": false
+  },
+  "fighter": {
+   "attack": 3,
+   "carrier_capacity": -1,
+   "carrier_cost": 1,
+   "cost": 12,
+   "defense": 4,
+   "is_air": true,
+   "is_sea": false,
+   "is_sub": false,
+   "movement": 4,
+   "transport_capacity": -1,
+   "transport_cost": -1,
+   "two_hit": false
+  },
+  "infantry": {
+   "attack": 1,
+   "carrier_capacity": -1,
+   "carrier_cost": -1,
+   "cost": 3,
+   "defense": 2,
+   "is_air": false,
+   "is_sea": false,
+   "is_sub": false,
+   "movement": 1,
+   "transport_capacity": -1,
+   "transport_cost": 1,
+   "two_hit": false
+  },
+  "submarine": {
+   "attack": 2,
+   "carrier_capacity": -1,
+   "carrier_cost": -1,
+   "cost": 8,
+   "defense": 2,
+   "is_air": false,
+   "is_sea": true,
+   "is_sub": true,
+   "movement": 2,
+   "transport_capacity": -1,
+   "transport_cost": -1,
+   "two_hit": false
+  },
+  "transport": {
+   "attack": 0,
+   "carrier_capacity": -1,
+   "carrier_cost": -1,
+   "cost": 8,
+   "defense": 1,
+   "is_air": false,
+   "is_sea": true,
+   "is_sub": false,
+   "movement": 2,
+   "transport_capacity": 2,
+   "transport_cost": -1,
+   "two_hit": false
+  }
+ }
+}
