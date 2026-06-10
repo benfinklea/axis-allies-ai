@@ -44,10 +44,15 @@ def _transcript_tail(n=80):
 
 
 def payload():
+    """Always serves whatever exists — transcript and AI minds update live
+    even before the game writes its first state checkpoint."""
     state_path = ROOT / config.STATE_FILE
-    if not state_path.exists():
-        return {"no_game": True}
-    st = json.loads(state_path.read_text())
+    st = None
+    if state_path.exists():
+        try:
+            st = json.loads(state_path.read_text())
+        except json.JSONDecodeError:
+            st = None  # mid-write race; next poll gets it
 
     powers = []
     for p in S.TURN_ORDER:
@@ -61,41 +66,42 @@ def payload():
             "provider": cfg.get("provider", "?"),
             "model": cfg.get("model", "?"),
             "voice": cfg.get("voice", ""),
-            "ipcs": st["ipcs"].get(p, 0),
-            "income": S.income(st, p),
-            "tech": st.get("tech", {}).get(p, []),
+            "ipcs": st["ipcs"].get(p, 0) if st else 0,
+            "income": S.income(st, p) if st else 0,
+            "tech": st.get("tech", {}).get(p, []) if st else [],
             "capital": S.CAPITALS[p],
-            "capital_owner": st["owners"].get(S.CAPITALS[p]),
-            "eliminated": p in st.get("eliminated", []),
+            "capital_owner": (st["owners"].get(S.CAPITALS[p]) if st else p),
+            "eliminated": p in st.get("eliminated", []) if st else False,
             "last_thought": last_thought,
             "history": hist[-MAX_HISTORY:],
         })
 
     territories = []
-    for t in sorted(S.TERR):
-        units = st["units"].get(t, {})
-        owner = st["owners"].get(t)
-        if not units and owner is None:
-            continue
-        sides_present = {S.SIDES[p] for p in units}
-        territories.append({
-            "name": t,
-            "owner": owner,
-            "water": S.TERR[t]["water"],
-            "ipc": S.TERR[t]["ipc_value"],
-            "units": units,
-            "contested": len(sides_present) > 1,
-        })
+    if st:
+        for t in sorted(S.TERR):
+            units = st["units"].get(t, {})
+            owner = st["owners"].get(t)
+            if not units and owner is None:
+                continue
+            sides_present = {S.SIDES[p] for p in units}
+            territories.append({
+                "name": t,
+                "owner": owner,
+                "water": S.TERR[t]["water"],
+                "ipc": S.TERR[t]["ipc_value"],
+                "units": units,
+                "contested": len(sides_present) > 1,
+            })
 
     return {
-        "round": st["round"],
-        "turn": st["turn"],
-        "phase": st["phase"],
+        "round": st["round"] if st else 0,
+        "turn": st["turn"] if st else "starting",
+        "phase": st["phase"] if st else "waiting for first checkpoint",
         "powers": powers,
-        "council": st.get("council_notes", {}),
+        "council": st.get("council_notes", {}) if st else {},
         "territories": territories,
-        "axis_income": S.side_income(st, "axis"),
-        "allies_income": S.side_income(st, "allies"),
+        "axis_income": S.side_income(st, "axis") if st else 0,
+        "allies_income": S.side_income(st, "allies") if st else 0,
         "econ_threshold": (config.ECON_VICTORY_AXIS_INCOME
                            if config.ECONOMIC_VICTORY else None),
         "transcript": _transcript_tail(),
@@ -105,7 +111,10 @@ def payload():
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path.split("?")[0] == "/data":
-            body = json.dumps(payload()).encode()
+            try:
+                body = json.dumps(payload()).encode()
+            except Exception as e:  # never leave the page frozen on a 500
+                body = json.dumps({"error": str(e)}).encode()
             ctype = "application/json"
         else:
             body = HTML_PATH.read_bytes()

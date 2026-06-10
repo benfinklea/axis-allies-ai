@@ -1,0 +1,7 @@
+#!/bin/sh
+# Game-night launcher. Run interactively so the table can type dice rolls:
+#   ./play           resume the saved game
+#   ./play --new     fresh game
+# Flags pass straight through to game.py (--auto-dice, --max-turns N, ...).
+cd "$(dirname "$0")" || exit 1
+FLEET_API_KEY=$(cat "$HOME/.config/fleet/key") exec python3 game.py "$@"

@@ -158,6 +158,9 @@ def run_turn(state, players, table, power, glog):
     table.voice = config.PLAYERS[power].get("voice")
     player = players[power]
     ui = UI(table, players, state, glog)
+
+    def checkpoint():  # keep the live viewer fresh between phases
+        S.save(state, config.STATE_FILE)
     board = S.summary_for_ai(state) + council.brief(state, power)
     table.speak(f"{power.upper()}'s turn. Treasury: {state['ipcs'][power]} IPCs.")
 
@@ -171,9 +174,11 @@ def run_turn(state, players, table, power, glog):
                  ASSESSMENT_SCHEMA, getattr(player, "assessment", None), glog)
     if d.get("assessment"):
         table.speak(d["assessment"])
+    checkpoint()
 
     # 1. Purchase
     state["phase"] = "purchase"
+    checkpoint()
     d = ai_phase(player, state,
                  f"{board}\n\nPURCHASE PHASE. Treasury: {state['ipcs'][power]} "
                  f"IPCs. Unit costs are in your briefing. Research dice cost 5.",
@@ -204,6 +209,7 @@ def run_turn(state, players, table, power, glog):
 
     # 2-3. Combat movement + combat
     state["phase"] = "combat_move"
+    checkpoint()
     board = S.summary_for_ai(state)
     d = ai_phase(player, state,
                  f"{board}\n\nCOMBAT MOVEMENT PHASE. Declare attacks (moves "
@@ -214,12 +220,15 @@ def run_turn(state, players, table, power, glog):
     apply_moves(state, table, power, d, combat_allowed=True)
 
     state["phase"] = "combat"
+    checkpoint()
     for terr in sorted(list(state["units"])):
         if S.units_in(state, terr, power) and S.hostile_powers_in(state, terr, power):
             combat.resolve_battle(state, terr, power, ui)
+            checkpoint()
 
     # 4. Noncombat
     state["phase"] = "noncombat"
+    checkpoint()
     board = S.summary_for_ai(state)
     d = ai_phase(player, state,
                  f"{board}\n\nNONCOMBAT MOVEMENT PHASE. Reposition freely; no "
@@ -231,6 +240,7 @@ def run_turn(state, players, table, power, glog):
 
     # 5. Mobilize
     state["phase"] = "mobilize"
+    checkpoint()
     pend = state["purchased_pending"].get(power, {})
     if pend:
         d = ai_phase(player, state,
@@ -274,6 +284,7 @@ def run_turn(state, players, table, power, glog):
 
     # 7. Debrief — comment on how the turn went, spoken before the next power
     state["phase"] = "debrief"
+    checkpoint()
     d = ai_phase(player, state,
                  f"{S.summary_for_ai(state)}\n\nTURN DEBRIEF. Your turn is "
                  f"over. In two or three short sentences, comment on what "
@@ -336,6 +347,11 @@ def main():
         for power in order[start:]:
             state["turn"] = power
             run_turn(state, players, table, power, glog)
+            # advance the pointer so a resume starts with the NEXT power
+            # instead of replaying the turn that just finished
+            nxt = order.index(power) + 1
+            if nxt < len(order):
+                state["turn"] = order[nxt]
             S.save(state, config.STATE_FILE)
             snap = Path(config.SNAPSHOT_DIR) / f"r{state['round']}_{power}.json"
             S.save(state, snap)
@@ -362,6 +378,7 @@ def main():
             return
         state["round"] += 1
         state["turn"] = S.TURN_ORDER[0]
+        S.save(state, config.STATE_FILE)
         table.speak(f"Round {state['round']} begins.")
 
 

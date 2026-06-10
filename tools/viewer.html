@@ -154,13 +154,10 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 function render() {
-  if (!data) return;
-  if (data.no_game) {
-    document.getElementById("roundline").textContent = "No game in progress";
-    return;
-  }
+  if (!data || data.error || !data.powers) return;
   document.getElementById("roundline").textContent =
-    `Round ${data.round} — ${data.turn.toUpperCase()} to play`;
+    data.round ? `Round ${data.round} — ${data.turn.toUpperCase()} to play`
+               : "Game starting…";
   document.getElementById("phaseline").textContent = `phase: ${data.phase}`;
   document.getElementById("axinc").textContent = data.axis_income;
   document.getElementById("alinc").textContent = data.allies_income;

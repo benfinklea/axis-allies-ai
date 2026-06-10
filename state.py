@@ -40,7 +40,9 @@ def load(path):
 def save(state, path):
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(state, indent=1, sort_keys=True))
+    tmp = p.with_suffix(".tmp")  # atomic: the live viewer reads this file
+    tmp.write_text(json.dumps(state, indent=1, sort_keys=True))
+    os.replace(tmp, p)
 
 
 def units_in(state, terr, power=None):
