@@ -77,11 +77,12 @@ copy is pushed — do not merge it into cmf main.
 1. Copy folder → new repo, push.
 2. `pip3 install -r requirements.txt && python3 selftest.py` on the Mac.
 3. `python3 game.py --stub` — verifies speech + dice entry feel at the table.
-4. Fill `config.py`: two local `base_url`s (LAN boxes Gandalf/Frodo/Pippin —
-   Ben was looking up which box serves which model; ports likely Ollama
-   `:11434/v1` or LM Studio `:1234/v1`), and replace placeholder model IDs
-   `gpt-5.2` / `gemini-2.5-pro` with current ones. Export the three API keys.
-5. `python3 tools/smoke_providers.py` until all five say OK.
+4. `config.py` is DONE (2026-06-10): all five powers route through the
+   fleet gateway (`http://gandalf.local:4000/v1`) — locals via `code-glm` +
+   `big`, frontier via subscription intents `codex`/`fable`/`gemini` ($0
+   API spend). One env var: `export FLEET_API_KEY=$(cat ~/.config/fleet/key)`.
+5. `tools/smoke_providers.py` — all five said OK on 2026-06-10 from pippen.
+   Re-run on the game-night Mac before the first session.
 6. First real game. Expect referee moments; log rule gaps in PLAN.md §10.
 
 ## Known gaps and risks (deliberate scope, not bugs)

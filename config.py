@@ -11,42 +11,56 @@ CASUALTY_CHOICE = "ai"       # always AI-chosen (locked decision)
 
 # --- The roster (game one) -------------------------------------------------
 # provider: "anthropic" | "openai_compat" | "stub"
-# Local boxes: fill in base_url once the LAN hostnames/ports are known
-# (e.g. http://gandalf.local:11434/v1 for Ollama's OpenAI-compatible API).
+# Local models go through the fleet gateway (one OpenAI-compatible endpoint
+# fronting every box, with health + failover): http://gandalf.local:4000/v1.
+# The "model" field is an intent, not a raw model id — the gateway owns the
+# machine map. Live list: GET /v1/models. Key: export FLEET_API_KEY before
+# running (export FLEET_API_KEY=$(cat ~/.config/fleet/key)); never hardcode it.
+FLEET_BASE_URL = "http://gandalf.local:4000/v1"
+# Frontier powers also go through the gateway: those routes ride Ben's
+# existing subscriptions (ChatGPT/Codex, Claude plan, Gemini), so games cost
+# $0 in API spend. Only env var needed for ALL five players: FLEET_API_KEY.
 PLAYERS = {
     "germany": {
         "provider": "openai_compat",
-        "model": "gpt-5.2",            # set to your current ChatGPT API model
-        "base_url": "https://api.openai.com/v1",
-        "api_key_env": "OPENAI_API_KEY",
+        "model": "codex",                # GPT-5.x Codex via ChatGPT subscription
+        "base_url": FLEET_BASE_URL,
+        "api_key_env": "FLEET_API_KEY",
         "voice": "Daniel",
     },
     "japan": {
-        "provider": "anthropic",
-        "model": "claude-fable-5",
-        "effort": "high",
-        "api_key_env": "ANTHROPIC_API_KEY",
+        # "fable" is free on the Claude plan through Jun 22, 2026; after that
+        # it's metered — switch to "opus" (still $0 on subscription) then.
+        "provider": "openai_compat",
+        "model": "fable",                # Claude Fable 5 via Claude plan
+        "base_url": FLEET_BASE_URL,
+        "api_key_env": "FLEET_API_KEY",
         "voice": "Kyoko",
     },
     "uk": {
         "provider": "openai_compat",
-        "model": "gemini-2.5-pro",      # set to your current Gemini model
-        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-        "api_key_env": "GEMINI_API_KEY",
+        "model": "gemini",               # Gemini 3.1 Pro via subscription
+        "base_url": FLEET_BASE_URL,
+        "api_key_env": "FLEET_API_KEY",
         "voice": "Serena",
     },
     "ussr": {
         "provider": "openai_compat",
-        "model": "glm-4.5-air",
-        "base_url": "http://FILL-ME-IN:11434/v1",   # Gandalf? Frodo? Pippin?
-        "api_key_env": "LOCAL_API_KEY",  # often unused; "ollama" works
+        "model": "code-glm",             # GLM-4.5-Air 106B on gandalf
+        "base_url": FLEET_BASE_URL,
+        "api_key_env": "FLEET_API_KEY",
         "voice": "Milena",
     },
     "usa": {
+        # "big" shares gandalf with ussr's "code-glm" and they evict each
+        # other (~35s model swap when the turn passes between them) — fine
+        # for a physical-board pace. The locked roster wants Qwen3-235B
+        # (reasoning > coder variants); if the swaps ever annoy, "code"
+        # (Qwen3-Coder-Next 80B on pippen) is the swap-free compromise.
         "provider": "openai_compat",
-        "model": "qwen3-235b",
-        "base_url": "http://FILL-ME-IN:11434/v1",
-        "api_key_env": "LOCAL_API_KEY",
+        "model": "big",                  # Qwen3-235B-A22B on gandalf
+        "base_url": FLEET_BASE_URL,
+        "api_key_env": "FLEET_API_KEY",
         "voice": "Samantha",
     },
 }

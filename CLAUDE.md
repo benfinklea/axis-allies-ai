@@ -15,8 +15,9 @@ games, troubleshoot providers, and make small fixes between sessions.
   armor defends on 2, no artillery/destroyers.
 - Weapons Development ON, Economic victory ON (Axis income ≥ 84),
   War council ON, physical dice (manual entry), casualties always AI-chosen.
-- Roster: Germany=ChatGPT, Japan=claude-fable-5, UK=Gemini,
-  USSR=GLM-4.5-Air (local), USA=Qwen3-235B (local).
+- Roster: Germany=ChatGPT (`codex`), Japan=claude-fable-5 (`fable`),
+  UK=Gemini (`gemini`), USSR=GLM-4.5-Air (`code-glm`, local),
+  USA=Qwen3-235B (`big`, local). Backticked names are fleet-gateway intents.
 
 ## Source of truth rules
 
@@ -44,22 +45,30 @@ python3 game.py --stub     # full table loop with offline stub AIs (tests TTS + 
 
 Then configure the live providers:
 
-1. Env vars: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`.
-2. `config.py`: the two local powers (ussr, usa) have `base_url:
-   "http://FILL-ME-IN:11434/v1"` — point at the LAN boxes
-   (Gandalf/Frodo/Pippin, whichever serve GLM-4.5-Air and Qwen3-235B).
+1. One env var for all five players:
+   `export FLEET_API_KEY=$(cat ~/.config/fleet/key)`. No per-vendor API keys.
+2. All five powers route through the fleet gateway at
+   `http://gandalf.local:4000/v1` — one OpenAI-compatible endpoint fronting
+   every local box AND Ben's frontier subscriptions (ChatGPT/Codex, Claude
+   plan, Gemini), so games cost $0 in API spend. The `model` field in
+   config.py is a gateway *intent*, not a raw model id; the gateway owns
+   routing, health, and failover. Don't point at boxes or vendor APIs
+   directly. Note: `code-glm` (ussr) and `big` (usa) both live on gandalf
+   and evict each other — ~35s model swap when the turn passes between
+   them, acceptable at physical-board pace.
 3. `python3 tools/smoke_providers.py` — one tiny JSON decision per
    configured power; prints OK/FAIL per provider. All five OK = ready.
-4. Check `config.py` model names against reality: the OpenAI and Gemini
-   entries are placeholders from build time — set them to current model IDs.
+   (Last verified all-5 OK: 2026-06-10.)
+4. Japan's `fable` intent is free on the Claude plan through Jun 22, 2026,
+   then becomes metered — switch japan to `opus` (still $0) after that.
 
 ## Troubleshooting map
 
 | Symptom | Likely fix |
 |---|---|
-| Local provider FAIL / connection refused | Wrong base_url or service down. Ollama serves `http://host:11434/v1`; LM Studio `http://host:1234/v1`. `curl http://host:11434/v1/models` from this Mac to verify reachability + exact model name. |
-| Local model name not found | Model id must match the server's list exactly (`ollama list`), e.g. `glm-4.5-air:latest` not `glm-4.5-air`. |
-| Gemini auth/404 | Needs the OpenAI-compat endpoint in base_url (`.../v1beta/openai`) and a current model id. |
+| Local provider FAIL / connection refused | Gateway down or key missing. Verify: `curl http://gandalf.local:4000/v1/models -H "Authorization: Bearer $(cat ~/.config/fleet/key)"`. |
+| Local model name not found | The `model` field must be a gateway intent (`code-glm`, `code`, `big`, `fast`, `reason`, ...) — check the live list with the curl above, not a raw model id. |
+| Frontier power FAIL (germany/japan/uk) | Same gateway checks as above — these ride subscription routes (`codex`/`fable`/`gemini`), not vendor APIs. If one subscription route is down, the gateway's failover or a sibling intent (`opus`, `sonnet`, `frontier`) is the quick fix. |
 | Garbage JSON from a local model | `players/repair.py` should catch it; if a provider rejects `response_format`, the adapter auto-degrades to prompt-enforced JSON. Persistent failures: try the model's "thinking" variant or a bigger quant. |
 | No speech | `say` is macOS-only and per-voice downloads live in System Settings → Spoken Content. Missing voices fall back silently; set `SPEECH = False` in config to silence entirely. |
 | Anthropic `refusal` stop reason | Shouldn't happen for a board game; if it does, re-send — and check the prompt didn't accumulate something weird. |
