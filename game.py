@@ -36,7 +36,14 @@ def build_players(all_stub=False):
                    f"classic Axis & Allies game.\n\nHOUSE RULE: you may not "
                    f"use web search, browsing, or any external tool to look "
                    f"up strategy or help. Play purely from your own training "
-                   f"knowledge.\n\n{rules}")
+                   f"knowledge.\n\nTURN STRUCTURE: every turn runs strictly "
+                   f"in this order — 1 purchase units, 2 combat movement, "
+                   f"3 combat resolution, 4 noncombat movement, 5 mobilize "
+                   f"new units, 6 collect income. You will be prompted for "
+                   f"each phase one at a time, in order. Answer ONLY for the "
+                   f"phase you are asked about: no moves during purchase, no "
+                   f"purchases during movement, and your reasoning should "
+                   f"stay on the current phase.\n\n{rules}")
         provider = "stub" if all_stub else cfg["provider"]
         if provider == "stub":
             players[power] = StubPlayer(power, cfg, persona)
@@ -77,7 +84,8 @@ class UI:
         # hard-validate: exactly `hits` units, all from the pool
         if (sum(remove.values()) != hits
                 or any(pool.get(u, 0) < n for u, n in remove.items())):
-            self.speak(f"{power} chose invalid casualties; cheapest-first applied.")
+            self.table.note(f"{power} chose invalid casualties; "
+                            f"cheapest-first applied.")
             remove = {c["type"]: c["count"] for c in
                       StubPlayer(power, {}, "").casualties(pool, hits)["remove"]}
         self.speak(f"{power} loses " + ", ".join(f"{n} {u}" for u, n in remove.items()))
@@ -138,7 +146,8 @@ def apply_moves(state, table, power, decision, combat_allowed):
             if S.hostile_powers_in(state, mv["to"], power):
                 err = "noncombat move into a hostile territory"
         if err:
-            table.speak(f"Illegal move bounced ({err}).")
+            # logged + on screen, but silent — no audio for AI mistakes
+            table.note(f"Illegal move bounced ({err}).")
             continue
         S.apply_move(state, power, units, mv["from"], mv["to"])
         # unopposed entry into enemy-owned land flips it during combat movement
@@ -181,7 +190,8 @@ def run_turn(state, players, table, power, glog):
     checkpoint()
     d = ai_phase(player, state,
                  f"{board}\n\nPURCHASE PHASE. Treasury: {state['ipcs'][power]} "
-                 f"IPCs. Unit costs are in your briefing. Research dice cost 5.",
+                 f"IPCs. Unit costs are in your briefing. Research dice cost "
+                 f"5. This phase is ONLY buying — movement comes later.",
                  PURCHASE_SCHEMA, getattr(player, "purchases", None), glog)
     if d.get("reasoning"):
         table.note(d["reasoning"])
@@ -268,7 +278,7 @@ def run_turn(state, players, table, power, glog):
             table.speak(f"{power} places {desc} in {terr}.")
         for terr, units in bounced.items():
             desc = ", ".join(f"{n} {u}" for u, n in sorted(units.items()))
-            table.speak(f"Placement bounced: {desc} in {terr}.")
+            table.note(f"Placement bounced: {desc} in {terr}.")
         council.record(state, power, d.get("note_to_allies", ""))
         if d.get("reasoning"):
             table.note(d["reasoning"])

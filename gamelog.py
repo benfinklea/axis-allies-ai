@@ -39,3 +39,8 @@ class GameLog:
 
     def result(self, winner, reason):
         self._write({"e": "result", "winner": winner, "reason": reason})
+
+    def photo_check(self, photo_paths, report):
+        self._write({"e": "photo_check",
+                     "photos": [str(p) for p in photo_paths],
+                     "report": report})

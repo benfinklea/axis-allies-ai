@@ -331,6 +331,15 @@ def main():
     (photos[0].parent / "verdict.md").write_text(
         text + "\n\n## Raw inventory\n" + answer + "\n")
 
+    # photo checks become part of the game's corpus log (with the photos)
+    state_path = ROOT / config.STATE_FILE
+    if state_path.exists():
+        st = S.load(state_path)
+        if st.get("game_id"):
+            from gamelog import GameLog
+            GameLog(st, Path(config.STATE_FILE).parent / "games") \
+                .photo_check(photos, text)
+
     problems = len(missing) + len(extra) + len(count_off)
     if problems:
         spoken = (f"{problems} problems. " +
