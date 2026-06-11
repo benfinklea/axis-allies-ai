@@ -1,0 +1,88 @@
+{
+  "_source": "Distilled from the Milton Bradley Axis & Allies Classic 2nd edition manual. Injected per-phase into AI prompts by game.py.",
+
+  "action_sequence": {
+    "overview": "A turn is a strict 6-part action sequence: 1 develop weapons / purchase units, 2 combat movement, 3 combat, 4 noncombat movement, 5 place new units, 6 collect income. You may skip parts, BUT: if you purchase (1) you must place (5); if you combat-move (2) you must resolve combat (3); income (6) happens every turn. Decisions in one part cannot be revisited in a later part.",
+    "1_develop_weapons_purchase": "Weapons development happens BEFORE purchasing: each research die costs 5 IPCs; a 6 is a breakthrough (a second die picks the technology; rerolled if already owned; effective immediately, never shared with allies). Then purchase units at Reference Chart costs. Purchased units are NOT on the board yet - they are placed in part 5, only at industrial complexes you have owned since the turn began. Do not buy units you will be unable to place: units that cannot be placed are LOST (e.g. naval units when every sea zone adjacent to your complexes is enemy-occupied; an AA gun when every complex territory already has one).",
+    "2_combat_movement": "Move units into enemy-occupied territories/sea zones to declare ALL of this turn's battles, all in this one phase. Attack one space from several adjacent spaces at once for mass. Each attacking unit can fight in only ONE battle per turn. NO reinforcements later: anything not moved now cannot join combat this turn. Moving into an enemy-CONTROLLED but unoccupied territory is also a combat move - with land units it flips ownership without a battle.",
+    "3_combat": "All combat movement happens before ANY combat resolves; then each embattled space resolves separately and completely. Combat is simultaneous: a unit chosen as a casualty still fires back in that round (exceptions: submarine first-shot kills and AA-gun kills never fire back). Rounds repeat until the attacker withdraws, one side is destroyed, or both are.",
+    "4_noncombat_movement": "Move any/all/none of the units that did NOT move in combat movement. No moves into ANY combat - land units only into friendly territories, naval units only into friendly/empty sea zones. EXCEPTION that MUST move: surviving aircraft from combat must fly out now and land in friendly territory (fighters may land on allied carriers; bombers never on carriers) - never in a territory just captured this turn, and the fuel they spent flying out counts against their range.",
+    "5_place_units": "Place everything purchased in part 1. Land and air units: in territories where YOU have owned an industrial complex since the turn began (never a just-captured complex, never an ally's). Naval units: in sea zones adjacent to such complex territories, and the zone must be free of enemy units. New industrial complexes: in any territory you have owned since the turn began, one complex max per territory. Original (game-start) complexes have unlimited production; purchased/captured complexes are limited per turn to the territory's income value (minimum 1). Unplaceable units are lost.",
+    "6_collect_income": "Collect IPCs equal to your National Production Level (sum of income values of territories you control). You collect NOTHING while your capital is in enemy hands, and you cannot give or lend IPCs to allies."
+  },
+
+  "movement_rules": {
+    "adjacency": "Units move between adjacent spaces (sharing a border). The board wraps around left-right (e.g. Western US is adjacent to Eastern US by wrap) but not top-bottom. An island plus its group is one land territory; flying to an island costs the surrounding sea zone AND the island (2 spaces).",
+    "stop_on_contact": "Ships and land units STOP when they enter an enemy-occupied space and must fight there - in a 2-space move, the pass-through space must be unoccupied or friendly. Only aircraft may fly over enemy units (but they take AA fire from each enemy-held territory with an AA gun that they fly over).",
+    "friendly_vs_enemy": "Friendly = controlled or occupied by you or your alliance. A sea zone with ANY enemy unit is enemy-occupied. Enemy-controlled (unoccupied) territories can be taken by land units as a combat move without a battle.",
+    "one_battle_per_unit": "Each attacking unit fights in at most one battle per turn; a tank that wins a battle cannot move again that turn.",
+    "neutral_territories": "Turkey, Mongolia, etc. Entering one (or flying over one) violates neutrality: pay 3 IPCs to the bank, place your control marker, and ALL land units end their move there (no blitzing through). Air may not fly over neutrals in NONCOMBAT movement at all. Once violated, it is a normal territory.",
+    "canals": "Panama: one territory; ships pass between its two sea zones only if you/your alliance controlled Panama at the start of your turn. Suez: ships pass only if your alliance controls BOTH Anglo-Egypt Sudan and Syria-Iraq; those two territories are land-adjacent to each other. Gibraltar-Algeria: no land movement. Eastern Europe-Turkey: no land movement. Finland-Norway is NOT land-adjacent to Eastern Europe (sea or air only)."
+  },
+
+  "units": {
+    "infantry": {
+      "cost": 3, "attack": 1, "defense": 2, "move": 1,
+      "rules": "Land only. Moves 1 adjacent territory. May ride transports (1 transport carries 2 infantry, or 1 infantry + 1 other land unit) up to 2 sea zones for amphibious assault or repositioning - boarding and landing is the WHOLE move, no extra land step before or after. Cargo on an attacked transport cannot fire and dies with the ship. Best cheap defender (defends 2)."
+    },
+    "armour": {
+      "cost": 5, "attack": 3, "defense": 2, "move": 2,
+      "rules": "Land only (tanks). Moves 1 or 2 territories; on a 2-territory move the FIRST territory must be friendly - unless BLITZING: if the first territory is enemy-controlled AND unoccupied, capture it in passing and continue to a second territory (which may be hostile). Cannot blitz through enemy-OCCUPIED or neutral territory. May ride transports (counts as full move; 1 tank per transport, plus 1 infantry). Strong attacker (3), same defense as infantry."
+    },
+    "fighter": {
+      "cost": 12, "attack": 3, "defense": 4, "move": 4,
+      "rules": "Range 4 spaces COUNTING THE RETURN TRIP: it flies out in combat movement and must land in noncombat movement in friendly territory or on a friendly/allied carrier (2 fighters per carrier max) - never in a just-captured territory. No kamikazes: an attack is illegal unless a landing spot is within remaining range. May overfly enemy territory (taking AA fire per gun overflown). Taking off from a carrier: the carrier's zone costs 0; the carrier must NOT move before the fighter launches this turn. Fighters on an island CANNOT defend the sea zone around it. In sea battles vs submarines: subs can't hit planes and planes survive a carrier's sinking (defend at 4 in the air, then must find a landing in that same zone or be lost)."
+    },
+    "bomber": {
+      "cost": 15, "attack": 4, "defense": 1, "move": 6,
+      "rules": "Like a fighter but range 6 (round trip included - max 3 out, 3 back to land where it started), can NEVER land on carriers, defends at only 1. Alternative attack: STRATEGIC BOMBING RAID against a territory with an enemy industrial complex - instead of normal combat: enemy AA fires one die per bomber (1 = shot down, no return fire), then each surviving bomber rolls a die and the defender pays that total in IPCs to the bank. A bomber either raids or fights units, never both."
+    },
+    "aaGun": {
+      "cost": 5, "attack": 0, "defense": 0, "move": 1,
+      "rules": "Special defensive land unit, ONE per territory, never attacks and never moves into enemy territory. Fires one die per enemy plane entering or overflying its territory during the ENEMY's combat movement: each 1 destroys a plane with no return fire; then the gun takes no further part in combat. Captured with its territory (never destroyed). Moves 1 friendly territory, or by transport."
+    },
+    "factory": {
+      "cost": 15, "attack": 0, "defense": 0, "move": 0,
+      "rules": "Industrial complex. Never moves, never fights, never destroyed. Gateway for placing new units (see place_units). One per territory. New ones go only in territories you have owned since the turn began; their production per turn is capped at the territory's income value (original game-start complexes are uncapped). Captured with the territory - usable by the captor starting NEXT turn. Allies can never use your complexes (except the liberated-while-capital-captured case). Can be strategic-bombed for IPC damage but never removed."
+    },
+    "battleship": {
+      "cost": 24, "attack": 4, "defense": 4, "move": 2,
+      "rules": "Sea only. Moves 1-2 zones, stop-on-contact applies. Never transports anything. King of the sea: 4/4. In an amphibious assault arriving with transports AND no preliminary naval battle, each battleship fires ONE free support shot at the defenders before the land battle (hits at 4; victims still counterattack in the land battle); the battleship itself is immune to the land battle. If a naval battle had to clear the zone first, no support shot."
+    },
+    "carrier": {
+      "cost": 18, "attack": 1, "defense": 3, "move": 2,
+      "rules": "Sea only. Moves 1-2 zones, stop-on-contact. Carries up to 2 fighters (yours or your allies'); never carries land units. Fighters launching this turn must take off from where the carrier STARTED. When the carrier is attacked, its fighters defend in the air (at 4) and can be chosen as casualties instead of the ship; if the carrier dies to a submarine first-shot, surviving fighters must land in that same zone (island or another carrier) or be lost."
+    },
+    "transport": {
+      "cost": 8, "attack": 0, "defense": 1, "move": 2,
+      "rules": "Sea only. Moves 1-2 zones, stop-on-contact. No attack factor; defends at 1; useful as a cheap casualty. Cargo: 2 infantry, OR 1 infantry + 1 tank, OR 1 infantry + 1 AA gun. Can load before/during/after moving, but ONCE IT UNLOADS ITS MOVE IS OVER. Bridging: it may load and unload without moving (e.g. ferry units between two coasts of the same zone). Cargo on board cannot fight; if the transport is hit, cargo dies too. May carry an ally's land units (board on ally's turn, move on yours, unload on ally's next). In an amphibious assault against a defended coast: any enemy ships in the zone must be destroyed FIRST (transports can be hit in that battle); only then do troops land - and once landed, amphibious assault troops CAN NEVER RETREAT."
+    },
+    "submarine": {
+      "cost": 8, "attack": 2, "defense": 2, "move": 2,
+      "rules": "Sea only. Moves 1-2 zones, stop-on-contact. FIRST-SHOT: attacking subs fire before everything else; their kills are removed immediately with NO return fire. Subs never hit planes and planes can hit subs - if attacked by aircraft alone, a sub cannot counterattack (but may withdraw after the round). WITHDRAWAL: after any round of fire, attacking subs may withdraw (first, back toward a zone the attack came from), then defending subs may withdraw to any ONE adjacent friendly or unoccupied sea zone (if none exists they must stay)."
+    }
+  },
+
+  "combat_rules": {
+    "land_sequence": "1) AA gun fires at attacking planes (1s kill, no return fire). 2) Attacker rolls one die per unit; hits send defender's chosen casualties behind the casualty line. 3) Defender rolls for ALL units including casualties (simultaneous fire); attacker's hit units are removed immediately (they already fired). 4) Defender's casualties are removed. 5) Repeat until a side is destroyed or the attacker retreats.",
+    "naval_sequence": "Same, with submarines first: attacking subs first-shot (victims removed with no return fire), then attacker's other units, then all defenders (including casualties), remove casualties, then subs (attacker's then defender's) may withdraw, repeat.",
+    "casualties": "The OWNER of hit units always chooses which of them die. A casualty fires back in the round it died (except sub first-shot and AA victims).",
+    "retreat": "Attacker-only privilege (except sub withdrawal): stop combat and move ALL surviving attacking units together BACK to ONE adjacent space that some attacking unit came from. Defenders never retreat (except defending subs). Amphibiously landed troops can never retreat.",
+    "air_cannot_capture": "Aircraft alone never capture territory - capture requires a surviving LAND unit to occupy. If only planes survive, the defender keeps the territory and the planes must fly home.",
+    "capture": "Capture flips ownership and income; AA guns and factories in the territory transfer to the captor (factory usable next turn). Recapturing an ALLY's original territory liberates it back to the ally (you get nothing - unless their capital is enemy-held, in which case you collect its income and may use its factory until the capital is freed).",
+    "capitals": "Capturing a capital (Eastern US, Russia, United Kingdom, Germany, Japan): the captor also takes ALL the owner's IPCs on hand. The dispossessed power still plays but collects no income and buys nothing until liberated.",
+    "multi_power_forces": "Allied units in one space DEFEND together (casualty choice by mutual agreement; each owner rolls their own units) but can NEVER attack together - each power attacks separately on its own turn.",
+    "amphibious_assault": "Land units attack a coast from transports. If enemy ships hold the landing zone, a naval battle must clear it first (no battleship support shot in that case; transports are valid targets; fighters used at sea cannot also fight on land that turn; if the zone is not cleared, surviving transports retreat). Once troops land they fight a normal land battle except they can never retreat. Battleships accompanying a clean landing each fire one free support shot first."
+  },
+
+  "weapons_development": {
+    "how": "Before purchasing: 5 IPCs per research die; any 6 = breakthrough; second die picks the technology (reroll duplicates); effective immediately; never shared with allies.",
+    "technologies": "1 JET POWER: your fighters defend at 5. 2 ROCKETS: one free rocket attack per turn - an AA gun within 3 spaces of an enemy industrial complex rolls one die, the owner pays that many IPCs. 3 SUPER SUBS: your subs attack at 3. 4 LONG-RANGE AIRCRAFT: fighters move 6, bombers move 8. 5 INDUSTRIAL TECHNOLOGY: every unit costs 1 less. 6 HEAVY BOMBERS: each bomber rolls 3 dice (in combat and in strategic raids)."
+  },
+
+  "victory": {
+    "allies": "Allies win when Germany AND Japan (the territories) are both captured, at the end of the turn in which the second falls.",
+    "axis_military": "Axis win by holding two of the three Allied capitals: Eastern United States, Russia, United Kingdom.",
+    "axis_economic": "Axis win if Germany + Japan combined National Production reaches 84 at the end of a complete round."
+  }
+}

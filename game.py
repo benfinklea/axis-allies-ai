@@ -28,6 +28,58 @@ ROOT = Path(__file__).resolve().parent
 TECHS = ["jet_power", "rockets", "super_subs", "long_range_aircraft",
          "industrial_technology", "heavy_bombers"]
 
+# Structured rulebook knowledge: the relevant sections are injected into
+# each phase's prompt so an AI re-reads the governing rules right before
+# it acts (full-book-in-system-prompt blew the gateway's size limits).
+RULES_KB = json.loads((ROOT / "prompts" / "rules_kb.json").read_text())
+
+
+def _kb_units(state, power):
+    """Rule entries for every unit type this power owns or has pending."""
+    owned = set()
+    for by_power in state["units"].values():
+        owned |= set(by_power.get(power, {}))
+    owned |= set(state.get("purchased_pending", {}).get(power, {}))
+    lines = []
+    for unit in sorted(owned & set(RULES_KB["units"])):
+        u = RULES_KB["units"][unit]
+        lines.append(f"- {unit.upper()} (cost {u['cost']}, attack "
+                     f"{u['attack']}, defense {u['defense']}, move "
+                     f"{u['move']}): {u['rules']}")
+    return "\n".join(lines)
+
+
+def phase_rules(phase, state, power):
+    """The rulebook text an AI must read before acting in this phase."""
+    kb = RULES_KB
+    if phase == "purchase":
+        body = (kb["action_sequence"]["1_develop_weapons_purchase"]
+                + "\n" + kb["weapons_development"]["technologies"]
+                + "\nPLACEMENT LIMITS (buy with these in mind): "
+                + kb["action_sequence"]["5_place_units"])
+    elif phase == "combat_move":
+        body = (kb["action_sequence"]["2_combat_movement"] + "\n"
+                + "\n".join(f"{k.upper()}: {v}"
+                            for k, v in kb["movement_rules"].items())
+                + "\nAMPHIBIOUS ASSAULTS: "
+                + kb["combat_rules"]["amphibious_assault"]
+                + "\nAIR CANNOT CAPTURE: "
+                + kb["combat_rules"]["air_cannot_capture"]
+                + "\n\nYOUR UNITS — read each before moving it:\n"
+                + _kb_units(state, power))
+    elif phase == "noncombat":
+        body = (kb["action_sequence"]["4_noncombat_movement"] + "\n"
+                + "STOP_ON_CONTACT: " + kb["movement_rules"]["stop_on_contact"]
+                + "\nNEUTRALS: " + kb["movement_rules"]["neutral_territories"]
+                + "\nCANALS: " + kb["movement_rules"]["canals"]
+                + "\n\nYOUR UNITS — read each before moving it:\n"
+                + _kb_units(state, power))
+    elif phase == "mobilize":
+        body = kb["action_sequence"]["5_place_units"]
+    else:
+        return ""
+    return f"\n\nRULEBOOK FOR THIS STEP — read before deciding:\n{body}\n"
+
 
 def build_players(all_stub=False):
     rules = (ROOT / "prompts" / "rules_summary.md").read_text()
@@ -351,7 +403,8 @@ def run_turn(state, players, table, power, glog):
     d = ai_phase(player, state,
                  f"{board}\n\nPURCHASE PHASE. Treasury: {state['ipcs'][power]} "
                  f"IPCs. Unit costs are in your briefing. Research dice cost "
-                 f"5. This phase is ONLY buying — movement comes later.",
+                 f"5. This phase is ONLY buying — movement comes later."
+                 + phase_rules("purchase", state, power),
                  PURCHASE_SCHEMA, getattr(player, "purchases", None), glog)
     if d.get("reasoning"):
         table.note(d["reasoning"])
@@ -399,7 +452,8 @@ def run_turn(state, players, table, power, glog):
                      f"attackers can join. Multi-territory offensives are "
                      f"normal — list every prong. Empty moves list = no "
                      f"attacks. Plan carefully: your full plan is validated "
-                     f"before anything is announced at the table.",
+                     f"before anything is announced at the table."
+                     + phase_rules("combat_move", state, power),
                      getattr(player, "combat_moves", None),
                      combat_allowed=True)
     if d.get("reasoning"):
@@ -421,7 +475,8 @@ def run_turn(state, players, table, power, glog):
                      f"{board}\n\nNONCOMBAT MOVEMENT PHASE. Reposition "
                      f"freely; no moves into hostile territory. Plan "
                      f"carefully: your full plan is validated before "
-                     f"anything is announced at the table.",
+                     f"anything is announced at the table."
+                     + phase_rules("noncombat", state, power),
                      getattr(player, "noncombat_moves", None),
                      combat_allowed=False)
     if d.get("reasoning"):
@@ -436,7 +491,8 @@ def run_turn(state, players, table, power, glog):
         d = ai_phase(player, state,
                      f"{S.summary_for_ai(state)}\n\nMOBILIZE PHASE. Place these "
                      f"purchased units at your industrial complexes: "
-                     f"{json.dumps(pend)}. Also leave a short note_to_allies.",
+                     f"{json.dumps(pend)}. Also leave a short note_to_allies."
+                     + phase_rules("mobilize", state, power),
                      PLACEMENT_SCHEMA, getattr(player, "placements", None),
                      glog)
         factories = [t for t, by_p in state["units"].items()
