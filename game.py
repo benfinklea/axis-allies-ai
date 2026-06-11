@@ -296,6 +296,25 @@ def await_done(table, items):
         time.sleep(1)
 
 
+def combat_lock_issue(state, power, units, src):
+    """Units that fought this turn are spent: in noncombat they may not
+    move again — only aircraft fly on (they MUST, to land)."""
+    locked = state.get("combat_moved", {}).get(src, {}).get(power, {})
+    if not locked:
+        return None
+    for u, n in units.items():
+        if u in S.AIR_UNITS:
+            continue
+        present = S.units_in(state, src, power).get(u, 0)
+        stuck = min(locked.get(u, 0), present)
+        if n > present - stuck:
+            return (f"{stuck} {u} in {src} fought this turn and cannot move "
+                    f"again (combat units stay where they won; only "
+                    f"aircraft fly on to land); only {present - stuck} "
+                    f"may move")
+    return None
+
+
 def validate_moves(state, power, decision, combat_allowed):
     """Dry-run a full move plan against a copy of the state; returns a list
     of error strings (empty = the whole plan is legal)."""
@@ -311,6 +330,8 @@ def validate_moves(state, power, decision, combat_allowed):
         if err is None and not combat_allowed and \
                 S.hostile_powers_in(trial, mv["to"], power):
             err = "noncombat move into a hostile territory"
+        if err is None and not combat_allowed:
+            err = combat_lock_issue(trial, power, units, mv["from"])
         if err:
             errs.append(f"- {desc} {mv.get('from')} -> {mv.get('to')}: {err}")
         else:
@@ -352,6 +373,8 @@ def apply_moves(state, table, power, decision, combat_allowed):
         if err is None and not combat_allowed:
             if S.hostile_powers_in(state, mv["to"], power):
                 err = "noncombat move into a hostile territory"
+            else:
+                err = combat_lock_issue(state, power, units, mv["from"])
         if err:
             # logged + on screen, but silent — no audio for AI mistakes
             table.note(f"Illegal move bounced ({err}).")
@@ -376,6 +399,13 @@ def apply_moves(state, table, power, decision, combat_allowed):
                            .setdefault(mv["to"], [])
             if mv["from"] not in origins:
                 origins.append(mv["from"])
+        if combat_allowed:
+            # combat movers are spent for the turn (aircraft excepted)
+            spent = state.setdefault("combat_moved", {}) \
+                         .setdefault(mv["to"], {}).setdefault(power, {})
+            for u, n in units.items():
+                if u not in S.AIR_UNITS:
+                    spent[u] = spent.get(u, 0) + n
         # unopposed entry into enemy-owned land flips it during combat movement
         if (combat_allowed and not S.TERR[mv["to"]]["water"]
                 and not S.hostile_powers_in(state, mv["to"], power)
@@ -490,6 +520,7 @@ def run_turn(state, players, table, power, glog):
     state["phase"] = "combat_move"
     state["attack_origins"] = {}  # fresh each turn; retreats consult this
     state["air_spent"] = {}  # fresh each turn; landing legality consults this
+    state["combat_moved"] = {}    # combat movers may not move again
     checkpoint()
     board = S.summary_for_ai(state)
     d = decide_moves(player, state, power, table, glog,

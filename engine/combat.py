@@ -174,6 +174,9 @@ def resolve_battle(state, terr, attacker, ui):
                 dest = choice.get("retreat_to")
                 if choice.get("action") == "retreat" and dest in dests:
                     S.apply_move(state, p, {"submarine": n_subs}, terr, dest)
+                    spent = state.setdefault("combat_moved", {}) \
+                                 .setdefault(dest, {}).setdefault(p, {})
+                    spent["submarine"] = spent.get("submarine", 0) + n_subs
                     ui.speak(f"{p}'s submarines withdraw from {terr} "
                              f"to {dest}.")
 
@@ -184,8 +187,15 @@ def resolve_battle(state, terr, attacker, ui):
             if choice.get("action") == "retreat":
                 dest = choice.get("retreat_to")
                 if dest in S.retreat_options(state, attacker, terr):
-                    S.apply_move(state, attacker,
-                                 S.units_in(state, terr, attacker), terr, dest)
+                    survivors = S.units_in(state, terr, attacker)
+                    S.apply_move(state, attacker, survivors, terr, dest)
+                    # retreated units fought: spent for the turn (air exempt)
+                    spent = state.setdefault("combat_moved", {}) \
+                                 .setdefault(dest, {}) \
+                                 .setdefault(attacker, {})
+                    for u, n in survivors.items():
+                        if u not in S.AIR_UNITS:
+                            spent[u] = spent.get(u, 0) + n
                     ui.speak(f"{attacker} retreats from {terr} to {dest}.")
                     return "retreat"
                 ui.speak(f"Retreat to {dest} is illegal — attackers may "
