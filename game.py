@@ -252,8 +252,11 @@ def apply_moves(state, table, power, decision, combat_allowed):
             # logged + on screen, but silent — no audio for AI mistakes
             table.note(f"Illegal move bounced ({err}).")
             continue
+        defenders = S.hostile_powers_in(state, mv["to"], power)
         S.apply_move(state, power, units, mv["from"], mv["to"])
         desc = ", ".join(f"{n} {u}" for u, n in units.items())
+        attack_tag = (f" — ATTACKING {' and '.join(defenders)} there"
+                      if defenders else "")
         # unopposed entry into enemy-owned land flips it during combat movement
         if (combat_allowed and not S.TERR[mv["to"]]["water"]
                 and not S.hostile_powers_in(state, mv["to"], power)
@@ -261,8 +264,10 @@ def apply_moves(state, table, power, decision, combat_allowed):
                 and any(u in S.LAND_UNITS for u in units)):
             S.capture(state, mv["to"], power)
             lines.append(f"{power} occupies undefended {mv['to']}.")
-        lines.append(f"{power}: move {desc} from {mv['from']} to {mv['to']}.")
-        todo.append(f"From {mv['from']}: move {desc} to {mv['to']}")
+        lines.append(f"{power}: move {desc} from {mv['from']} to "
+                     f"{mv['to']}{attack_tag}.")
+        todo.append(f"From {mv['from']}: move {desc} to {mv['to']}"
+                    f"{attack_tag}")
     post_actions(todo)        # panel first: move plastic while audio reads
     for line in lines:
         table.speak(line)
