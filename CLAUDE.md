@@ -9,6 +9,13 @@ Read README.md for the concept, PLAN.md for architecture.
 You (the assistant working in this repo) are the table engineer: help run
 games, troubleshoot providers, and make small fixes between sessions.
 
+## Table rules for the assistant — do not violate
+
+- NEVER restart the game process (or otherwise replay any power's turn)
+  without telling Ben what a restart will replay and getting his explicit
+  agreement first — even to deploy a fix. Code changes wait, parked, until
+  Ben approves a restart moment. (Ben, 2026-06-10 game night.)
+
 ## Locked decisions — do not relitigate
 
 - Classic 2nd edition rules (NOT 1942, NOT Revised). One-hit battleships,
