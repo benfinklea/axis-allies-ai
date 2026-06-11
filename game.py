@@ -463,34 +463,51 @@ def run_turn(state, players, table, power, glog):
         table.speak(d["assessment"])
     checkpoint()
 
-    # 1. Purchase
+    # 1. Purchase — think, plan, respond: an invalid plan goes back to the
+    # AI with reasons; it must resubmit (or explicitly buy nothing)
     state["phase"] = "purchase"
     checkpoint()
-    d = ai_phase(player, state,
-                 f"{board}\n\nPURCHASE PHASE. Treasury: {state['ipcs'][power]} "
-                 f"IPCs. Unit costs are in your briefing. Research dice cost "
-                 f"5. This phase is ONLY buying — movement comes later."
-                 + phase_rules("purchase", state, power),
-                 PURCHASE_SCHEMA, getattr(player, "purchases", None), glog)
+    prompt = (f"{board}\n\nPURCHASE PHASE. Treasury: {state['ipcs'][power]} "
+              f"IPCs. Unit costs are in your briefing. Research dice cost "
+              f"5. This phase is ONLY buying — movement comes later. To buy "
+              f"nothing, return an empty purchases list."
+              + phase_rules("purchase", state, power))
+    d = ai_phase(player, state, prompt, PURCHASE_SCHEMA,
+                 getattr(player, "purchases", None), glog)
+    cost = research = 0
+    for _ in range(config.MAX_LEGALITY_RETRIES + 1):
+        problems = []
+        for p in d.get("purchases", []):
+            cu = S.canon_unit(p.get("unit"))
+            if cu:
+                p["unit"] = cu
+            else:
+                problems.append(f"unknown unit type '{p.get('unit')}'")
+        cost = sum(S.STATS[p["unit"]]["cost"] * p["quantity"]
+                   for p in d.get("purchases", []) if p["unit"] in S.STATS)
+        research = (max(0, int(d.get("research_dice", 0)))
+                    if config.WEAPONS_DEVELOPMENT else 0)
+        cost += research * 5
+        if cost > state["ipcs"][power]:
+            problems.append(f"the plan costs {cost} IPCs but your treasury "
+                            f"is {state['ipcs'][power]}")
+        if not problems or isinstance(player, StubPlayer):
+            break
+        table.note(f"{power} purchase invalid "
+                   f"({'; '.join(problems)}); re-asking.")
+        d = ai_phase(player, state,
+                     f"Your purchase was INVALID: {'; '.join(problems)}. "
+                     f"Resubmit your ENTIRE corrected purchase plan now — "
+                     f"this is still your purchase phase and your treasury "
+                     f"is {state['ipcs'][power]} IPCs. If you truly want to "
+                     f"buy nothing, return an empty purchases list.",
+                     PURCHASE_SCHEMA, getattr(player, "purchases", None),
+                     glog)
     if d.get("reasoning"):
         table.note(d["reasoning"])
-    unknown = []
-    for p in d.get("purchases", []):
-        cu = S.canon_unit(p.get("unit"))
-        if cu:
-            p["unit"] = cu
-        else:
-            unknown.append(str(p.get("unit")))
-    if unknown:
-        table.speak(f"{power} asked to buy unknown unit(s) "
-                    f"{', '.join(unknown)} — skipped; the table referees "
-                    f"any correction.")
-    cost = sum(S.STATS[p["unit"]]["cost"] * p["quantity"]
-               for p in d.get("purchases", []) if p["unit"] in S.STATS)
-    research = max(0, int(d.get("research_dice", 0))) if config.WEAPONS_DEVELOPMENT else 0
-    cost += research * 5
-    if cost > state["ipcs"][power]:
-        table.speak(f"{power} overspent ({cost} > {state['ipcs'][power]}); purchase voided.")
+    if problems:
+        table.speak(f"{power}'s purchase was still invalid after retries "
+                    f"({'; '.join(problems)}); buying nothing.")
     else:
         state["ipcs"][power] -= cost
         bought = ", ".join(f"{p['quantity']} {p['unit']}"
