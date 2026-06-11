@@ -46,12 +46,16 @@ def build_players(all_stub=False):
                    f"knowledge.\n\nACTION SEQUENCE: every turn follows the "
                    f"classic action sequence, strictly in order — "
                    f"1 develop weapons and purchase units, 2 combat "
-                   f"movement, 3 combat, 4 noncombat movement, 5 mobilize "
-                   f"new units, 6 collect income. You will be prompted for "
-                   f"each step one at a time, in order. Answer ONLY for the "
-                   f"step you are asked about: no moves during purchase, no "
-                   f"purchases during movement, and your reasoning should "
-                   f"stay on the current step.\n\n{rules}")
+                   f"movement (declare and move ALL attacking units for ALL "
+                   f"of this turn's attacks in one batch — there is no "
+                   f"second wave; any unit not moved now cannot join combat "
+                   f"this turn), 3 combat (every battle you set up resolves, "
+                   f"one territory at a time), 4 noncombat movement, "
+                   f"5 mobilize new units, 6 collect income. You will be "
+                   f"prompted for each step one at a time, in order. Answer "
+                   f"ONLY for the step you are asked about: no moves during "
+                   f"purchase, no purchases during movement, and your "
+                   f"reasoning should stay on the current step.\n\n{rules}")
         provider = "stub" if all_stub else cfg["provider"]
         if provider == "stub":
             players[power] = StubPlayer(power, cfg, persona)
@@ -314,8 +318,13 @@ def run_turn(state, players, table, power, glog):
     checkpoint()
     board = S.summary_for_ai(state)
     d = decide_moves(player, state, power, table, glog,
-                     f"{board}\n\nCOMBAT MOVEMENT PHASE. Declare attacks "
-                     f"(moves into enemy territory). Empty moves list = no "
+                     f"{board}\n\nCOMBAT MOVEMENT PHASE. Declare ALL of this "
+                     f"turn's attacks NOW, in one list — every territory you "
+                     f"are assaulting and every unit joining each assault. "
+                     f"This is your only combat movement this turn: there is "
+                     f"no second wave, and once battles start no more "
+                     f"attackers can join. Multi-territory offensives are "
+                     f"normal — list every prong. Empty moves list = no "
                      f"attacks. Plan carefully: your full plan is validated "
                      f"before anything is announced at the table.",
                      getattr(player, "combat_moves", None),
