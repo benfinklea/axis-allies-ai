@@ -45,10 +45,10 @@
                  filter: drop-shadow(.18px .3px .25px rgba(0,0,0,.5)); }
   .t { position: absolute; transform: translate(-50%, -50%);
        text-align: center; cursor: default; z-index: 2; }
-  .t .tile { display: inline-block; border-radius: 4px; padding: 1px 5px 2px;
-       background: color-mix(in srgb, var(--oc) 78%, #f5ecd4);
-       border: 1px solid color-mix(in srgb, var(--oc) 60%, #1d1a14);
-       box-shadow: 0 1px 3px rgba(0,0,0,.45); }
+  .t .tile { display: inline-block; border-radius: 3px; padding: 0 4px 1px;
+       background: rgba(246, 238, 214, .78);
+       border: 1px solid rgba(46, 36, 18, .45);
+       box-shadow: 0 1px 2px rgba(0,0,0,.35); }
   .t.sea .tile { background: rgba(16, 42, 60, .55); border: 1px solid
        rgba(190, 215, 235, .4); border-radius: 10px; }
   .t.sea:not(.occupied) { display: none; }
@@ -102,6 +102,8 @@
     </defs>
     <g id="continents"></g>
   </svg>
+  <canvas id="terrmap" style="position:absolute; inset:0; width:100%;
+          height:100%;"></canvas>
   <div id="title">SPRING 1942</div>
   <div id="pieces"></div>
 </div></div>
@@ -188,6 +190,104 @@ function drawContinents() {
   }).join("");
 }
 
+// ── territory regions: partition each landmass among its territories and
+// color by current owner, with drawn borders — the printed-board look ──
+const TW = 1000, TH = 500;
+let landMask = null, idxLand = null, idxSea = null, seedNames = [];
+let paintSig = null;
+
+function buildIndexMap() {
+  const cv = document.createElement("canvas");
+  cv.width = TW; cv.height = TH;
+  const cx = cv.getContext("2d");
+  cx.fillStyle = "#fff";
+  for (const poly of CONTINENTS) {
+    cx.beginPath();
+    poly.forEach(([lat, lon], i) => {
+      const X = px(lon) * TW / 100, Y = py(lat) * TH / 100;
+      i ? cx.lineTo(X, Y) : cx.moveTo(X, Y);
+    });
+    cx.closePath(); cx.fill();
+  }
+  const a = cx.getImageData(0, 0, TW, TH).data;
+  landMask = new Uint8Array(TW * TH);
+  for (let i = 0; i < TW * TH; i++) landMask[i] = a[i * 4 + 3] > 127 ? 1 : 0;
+
+  const landSeeds = [], seaSeeds = [];
+  seedNames = [];
+  for (const [name, pos] of Object.entries(layout)) {
+    const s = {x: pos[0] * TW / 100, y: pos[1] * TH / 100,
+               i: seedNames.length};
+    seedNames.push(name);
+    (name.endsWith("Sea Zone") ? seaSeeds : landSeeds).push(s);
+  }
+  idxLand = new Int16Array(TW * TH).fill(-1);
+  idxSea = new Int16Array(TW * TH).fill(-1);
+  for (let y = 0; y < TH; y++) {
+    for (let x = 0; x < TW; x++) {
+      const o = y * TW + x;
+      const seeds = landMask[o] ? landSeeds : seaSeeds;
+      let best = -1, bd = Infinity;
+      for (const s of seeds) {
+        const dx = s.x - x, dy = s.y - y, d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; best = s.i; }
+      }
+      (landMask[o] ? idxLand : idxSea)[o] = best;
+    }
+  }
+}
+
+const RGB = {germany: [126, 136, 150], japan: [222, 138, 56],
+             uk: [186, 154, 102], ussr: [184, 76, 62], usa: [112, 146, 78],
+             neutral: [186, 174, 142]};
+
+function paintTerritories(d) {
+  const owner = {};
+  d.territories.forEach(t => { owner[t.name] = t.owner; });
+  const sig = JSON.stringify(owner);
+  if (sig === paintSig || !idxLand) return;
+  paintSig = sig;
+  const pal = seedNames.map(n => RGB[owner[n]] || RGB.neutral);
+  const cv = document.getElementById("terrmap");
+  cv.width = TW; cv.height = TH;
+  const cx = cv.getContext("2d");
+  const img = cx.createImageData(TW, TH);
+  const D = img.data, N = TW * TH;
+  for (let o = 0; o < N; o++) {
+    const p = o * 4;
+    const nb = [o - 1, o + 1, o - TW, o + TW];
+    if (landMask[o]) {
+      const idx = idxLand[o];
+      let border = false, coast = false;
+      for (const q of nb) {
+        if (q < 0 || q >= N) continue;
+        if (!landMask[q]) coast = true;
+        else if (idxLand[q] !== idx) border = true;
+      }
+      if (coast) { D[p] = 56; D[p + 1] = 46; D[p + 2] = 28; D[p + 3] = 255; }
+      else if (border) { D[p] = 96; D[p + 1] = 80; D[p + 2] = 50;
+                         D[p + 3] = 230; }
+      else {
+        const c = pal[idx];  // owner color washed toward parchment
+        D[p] = (c[0] * 0.58 + 224 * 0.42) | 0;
+        D[p + 1] = (c[1] * 0.58 + 208 * 0.42) | 0;
+        D[p + 2] = (c[2] * 0.58 + 172 * 0.42) | 0;
+        D[p + 3] = 255;
+      }
+    } else {
+      const idx = idxSea[o];
+      let border = false;
+      for (const q of nb)
+        if (q >= 0 && q < N && !landMask[q] && idxSea[q] !== idx)
+          border = true;
+      if (border) { D[p] = 165; D[p + 1] = 198; D[p + 2] = 222;
+                    D[p + 3] = 48; }
+      else D[p + 3] = 0;  // transparent — the deep-sea board shows through
+    }
+  }
+  cx.putImageData(img, 0, 0);
+}
+
 let layout = null, snaps = [];
 document.getElementById("legend").innerHTML =
   Object.entries(FLAGS).map(([p, f]) =>
@@ -196,6 +296,7 @@ document.getElementById("legend").innerHTML =
 async function init() {
   drawContinents();
   layout = await (await fetch("/layout")).json();
+  buildIndexMap();
   await refreshSnaps();
   tick();
   setInterval(() => { if (!sel().value) tick(); }, 3000);
@@ -229,6 +330,7 @@ async function tick() {
 }
 
 function render(d) {
+  paintTerritories(d);
   const caps = {};
   d.powers.forEach(p => caps[p.capital] = p.power);
   document.getElementById("pieces").innerHTML = d.territories.map(t => {
