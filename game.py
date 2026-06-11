@@ -172,16 +172,21 @@ def ai_phase(player, state, prompt, schema, stub_method, glog=None):
     return decision
 
 
-def table_todo(table, items):
-    """Show physical actions in the viewer's DO THIS panel and wait for the
-    humans to press Done. Skipped entirely in auto-dice (simulation) mode."""
-    if not items:
+def post_actions(items):
+    """Put physical actions on the viewer's DO THIS panel immediately —
+    BEFORE the audio reads them — so the table moves plastic while the
+    voice catches up."""
+    if items:
+        actions = Path(config.STATE_FILE).parent / "actions.json"
+        actions.write_text(json.dumps({"items": items}))
+
+
+def await_done(table, items):
+    """Block until the table presses Done (manual-dice games only)."""
+    if not items or config.DICE_MODE != "manual":
         return
     actions = Path(config.STATE_FILE).parent / "actions.json"
-    actions.write_text(json.dumps({"items": items}))
-    if config.DICE_MODE != "manual":
-        return
-    table.speak("Your move, humans. Press done when the board matches.")
+    table.speak("Press done when the board matches.")
     while True:
         try:
             if not json.loads(actions.read_text()).get("items"):
@@ -233,7 +238,7 @@ def decide_moves(player, state, power, table, glog, base_prompt, stub_method,
 
 
 def apply_moves(state, table, power, decision, combat_allowed):
-    legal = []
+    todo, lines = [], []
     for mv in decision.get("moves", []):
         units = {u["type"]: u["count"] for u in mv.get("units", [])}
         err = S.check_move(state, power, units, mv.get("from", ""), mv.get("to", ""))
@@ -245,18 +250,21 @@ def apply_moves(state, table, power, decision, combat_allowed):
             table.note(f"Illegal move bounced ({err}).")
             continue
         S.apply_move(state, power, units, mv["from"], mv["to"])
+        desc = ", ".join(f"{n} {u}" for u, n in units.items())
         # unopposed entry into enemy-owned land flips it during combat movement
         if (combat_allowed and not S.TERR[mv["to"]]["water"]
                 and not S.hostile_powers_in(state, mv["to"], power)
                 and S.is_enemy(power, state["owners"].get(mv["to"], power))
                 and any(u in S.LAND_UNITS for u in units)):
             S.capture(state, mv["to"], power)
-            table.speak(f"{power} occupies undefended {mv['to']}.")
-        desc = ", ".join(f"{n} {u}" for u, n in units.items())
-        table.speak(f"{power}: move {desc} from {mv['from']} to {mv['to']}.")
-        legal.append(f"Move {desc}: {mv['from']} → {mv['to']}")
-    table_todo(table, legal)
-    return legal
+            lines.append(f"{power} occupies undefended {mv['to']}.")
+        lines.append(f"{power}: move {desc} from {mv['from']} to {mv['to']}.")
+        todo.append(f"From {mv['from']}: move {desc} to {mv['to']}")
+    post_actions(todo)        # panel first: move plastic while audio reads
+    for line in lines:
+        table.speak(line)
+    await_done(table, todo)
+    return todo
 
 
 def run_turn(state, players, table, power, glog):
@@ -403,12 +411,13 @@ def run_turn(state, players, table, power, glog):
                 bucket = bounced
             slot = bucket.setdefault(str(terr), {})
             slot[str(unit)] = slot.get(str(unit), 0) + 1
-        todo = []
+        todo = [f"Place {', '.join(f'{n} {u}' for u, n in sorted(units.items()))} "
+                f"in {terr}" for terr, units in placed.items()]
+        post_actions(todo)
         for terr, units in placed.items():
             desc = ", ".join(f"{n} {u}" for u, n in sorted(units.items()))
             table.speak(f"{power} places {desc} in {terr}.")
-            todo.append(f"Place {desc} in {terr}")
-        table_todo(table, todo)
+        await_done(table, todo)
         for terr, units in bounced.items():
             desc = ", ".join(f"{n} {u}" for u, n in sorted(units.items()))
             table.note(f"Placement bounced: {desc} in {terr}.")
