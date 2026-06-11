@@ -7,6 +7,7 @@
     python3 game.py --auto-dice     # script rolls the dice (simulation)
     python3 game.py --max-turns N   # stop after N power-turns (simulation)
 """
+import copy
 import json
 import sys
 import time
@@ -144,6 +145,66 @@ def ai_phase(player, state, prompt, schema, stub_method, glog=None):
     return decision
 
 
+def table_todo(table, items):
+    """Show physical actions in the viewer's DO THIS panel and wait for the
+    humans to press Done. Skipped entirely in auto-dice (simulation) mode."""
+    if not items:
+        return
+    actions = Path(config.STATE_FILE).parent / "actions.json"
+    actions.write_text(json.dumps({"items": items}))
+    if config.DICE_MODE != "manual":
+        return
+    table.speak("Your move, humans. Press done when the board matches.")
+    while True:
+        try:
+            if not json.loads(actions.read_text()).get("items"):
+                return
+        except (OSError, json.JSONDecodeError):
+            return
+        time.sleep(1)
+
+
+def validate_moves(state, power, decision, combat_allowed):
+    """Dry-run a full move plan against a copy of the state; returns a list
+    of error strings (empty = the whole plan is legal)."""
+    trial = copy.deepcopy(state)
+    errs = []
+    for mv in decision.get("moves", []):
+        units = {u["type"]: u["count"] for u in mv.get("units", [])}
+        desc = ", ".join(f"{n} {u}" for u, n in units.items())
+        err = S.check_move(trial, power, units, mv.get("from", ""),
+                           mv.get("to", ""))
+        if err is None and not combat_allowed and \
+                S.hostile_powers_in(trial, mv["to"], power):
+            err = "noncombat move into a hostile territory"
+        if err:
+            errs.append(f"- {desc} {mv.get('from')} -> {mv.get('to')}: {err}")
+        else:
+            S.apply_move(trial, power, units, mv["from"], mv["to"])
+    return errs
+
+
+def decide_moves(player, state, power, table, glog, base_prompt, stub_method,
+                 combat_allowed):
+    """Think, plan, THEN respond: the AI's plan is validated privately and
+    bounced back with reasons until it's fully legal (or retries run out).
+    Only the final plan gets spoken and applied."""
+    prompt = base_prompt
+    d = ai_phase(player, state, prompt, MOVES_SCHEMA, stub_method, glog)
+    for _ in range(config.MAX_LEGALITY_RETRIES):
+        errs = validate_moves(state, power, d, combat_allowed)
+        if not errs or isinstance(player, StubPlayer):
+            break
+        table.note(f"{power} plan has {len(errs)} illegal moves; re-asking.")
+        prompt = (f"Your plan contains ILLEGAL moves:\n" + "\n".join(errs)
+                  + f"\n\nResubmit your ENTIRE corrected move list (legal "
+                  f"moves included again, illegal ones fixed or dropped). "
+                  f"Remember: units only reach adjacent territories per "
+                  f"their movement range; land units cannot cross sea.")
+        d = ai_phase(player, state, prompt, MOVES_SCHEMA, stub_method, glog)
+    return d
+
+
 def apply_moves(state, table, power, decision, combat_allowed):
     legal = []
     for mv in decision.get("moves", []):
@@ -166,7 +227,8 @@ def apply_moves(state, table, power, decision, combat_allowed):
             table.speak(f"{power} occupies undefended {mv['to']}.")
         desc = ", ".join(f"{n} {u}" for u, n in units.items())
         table.speak(f"{power}: move {desc} from {mv['from']} to {mv['to']}.")
-        legal.append(mv)
+        legal.append(f"Move {desc}: {mv['from']} → {mv['to']}")
+    table_todo(table, legal)
     return legal
 
 
@@ -250,10 +312,13 @@ def run_turn(state, players, table, power, glog):
     state["phase"] = "combat_move"
     checkpoint()
     board = S.summary_for_ai(state)
-    d = ai_phase(player, state,
-                 f"{board}\n\nCOMBAT MOVEMENT PHASE. Declare attacks (moves "
-                 f"into enemy territory). Empty moves list = no attacks.",
-                 MOVES_SCHEMA, getattr(player, "combat_moves", None), glog)
+    d = decide_moves(player, state, power, table, glog,
+                     f"{board}\n\nCOMBAT MOVEMENT PHASE. Declare attacks "
+                     f"(moves into enemy territory). Empty moves list = no "
+                     f"attacks. Plan carefully: your full plan is validated "
+                     f"before anything is announced at the table.",
+                     getattr(player, "combat_moves", None),
+                     combat_allowed=True)
     if d.get("reasoning"):
         table.note(d["reasoning"])
     apply_moves(state, table, power, d, combat_allowed=True)
@@ -269,10 +334,13 @@ def run_turn(state, players, table, power, glog):
     state["phase"] = "noncombat"
     checkpoint()
     board = S.summary_for_ai(state)
-    d = ai_phase(player, state,
-                 f"{board}\n\nNONCOMBAT MOVEMENT PHASE. Reposition freely; no "
-                 f"moves into hostile territory.",
-                 MOVES_SCHEMA, getattr(player, "noncombat_moves", None), glog)
+    d = decide_moves(player, state, power, table, glog,
+                     f"{board}\n\nNONCOMBAT MOVEMENT PHASE. Reposition "
+                     f"freely; no moves into hostile territory. Plan "
+                     f"carefully: your full plan is validated before "
+                     f"anything is announced at the table.",
+                     getattr(player, "noncombat_moves", None),
+                     combat_allowed=False)
     if d.get("reasoning"):
         table.note(d["reasoning"])
     apply_moves(state, table, power, d, combat_allowed=False)
@@ -302,9 +370,12 @@ def run_turn(state, players, table, power, glog):
                 bucket = bounced
             slot = bucket.setdefault(str(terr), {})
             slot[str(unit)] = slot.get(str(unit), 0) + 1
+        todo = []
         for terr, units in placed.items():
             desc = ", ".join(f"{n} {u}" for u, n in sorted(units.items()))
             table.speak(f"{power} places {desc} in {terr}.")
+            todo.append(f"Place {desc} in {terr}")
+        table_todo(table, todo)
         for terr, units in bounced.items():
             desc = ", ".join(f"{n} {u}" for u, n in sorted(units.items()))
             table.note(f"Placement bounced: {desc} in {terr}.")
@@ -371,6 +442,17 @@ def main():
     if "game_id" not in state:
         state["game_id"] = time.strftime("%Y%m%d-%H%M%S")
     players = build_players(all_stub="--stub" in sys.argv)
+    if fresh:  # a new game gets clean table surfaces; the old game's
+        # transcript/minds/actions live on in its corpus JSONL
+        Path(config.TRANSCRIPT).parent.mkdir(parents=True, exist_ok=True)
+        Path(config.TRANSCRIPT).write_text("")
+        for leftover in ("PAUSE", "actions.json"):
+            p = Path(config.STATE_FILE).parent / leftover
+            if p.exists():
+                p.unlink()
+        minds = Path(config.STATE_FILE).parent / "minds"
+        for f in (minds.glob("*.json") if minds.exists() else []):
+            f.unlink()
     glog = GameLog(state, Path(config.STATE_FILE).parent / "games")
     if fresh:
         glog.start(

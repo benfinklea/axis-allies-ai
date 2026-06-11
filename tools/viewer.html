@@ -139,6 +139,18 @@
               padding: 6px 16px; font-size: 14px; font-weight: 700; }
   #pausebtn.paused { background: var(--gold); color: #1a1408;
                      box-shadow: 0 0 14px rgba(232,195,90,.4); }
+  #todo { display: none; margin: 14px 20px 0; padding: 14px 18px;
+          background: linear-gradient(180deg, #2a2410, #1d1a10);
+          border: 2px solid var(--gold); border-radius: 12px;
+          box-shadow: 0 0 24px rgba(232,195,90,.25); }
+  #todo.show { display: block; }
+  #todo h2 { color: var(--gold); font-size: 14px; }
+  #todo ul { margin: 4px 0 12px; padding-left: 22px; font-size: 15px;
+             line-height: 1.9; }
+  #donebtn { background: var(--gold); color: #1a1408; border: none;
+             border-radius: 10px; padding: 9px 26px; font-size: 15px;
+             font-weight: 800; cursor: pointer; }
+  #donebtn:hover { filter: brightness(1.1); }
 </style>
 </head>
 <body>
@@ -154,6 +166,11 @@
   </div>
   <button id="pausebtn" onclick="togglePause()">⏸ Pause</button>
   <span id="status"></span>
+</div>
+<div id="todo">
+  <h2>🫵 DO THIS — the table's move</h2>
+  <ul id="todo-items"></ul>
+  <button id="donebtn" onclick="markDone()">✅ Done — board matches</button>
 </div>
 <main>
   <section>
@@ -218,6 +235,10 @@ function render() {
   const pb = document.getElementById("pausebtn");
   pb.textContent = data.paused ? "▶ Resume" : "⏸ Pause";
   pb.classList.toggle("paused", data.paused);
+  const todo = document.getElementById("todo");
+  todo.classList.toggle("show", (data.actions || []).length > 0);
+  document.getElementById("todo-items").innerHTML =
+    (data.actions || []).map(a => `<li>${esc(a)}</li>`).join("");
   document.getElementById("phaseline").textContent = `phase: ${data.phase}`;
   document.getElementById("axinc").textContent = data.axis_income;
   document.getElementById("alinc").textContent = data.allies_income;
@@ -331,6 +352,10 @@ document.getElementById("filters").addEventListener("click", e => {
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
 async function togglePause() {
   await fetch("/pause", {method: "POST"});
+  tick();
+}
+async function markDone() {
+  await fetch("/done", {method: "POST"});
   tick();
 }
 

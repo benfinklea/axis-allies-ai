@@ -75,12 +75,20 @@ def _mind(power):
 
 
 def _photo_report():
-    """Latest photo-check verdict, for the viewer's Photo Check panel."""
+    """Latest photo-check verdict FROM THIS GAME (run dirs and game_ids
+    share the timestamp format, so a string compare scopes them)."""
     photo_root = ROOT / Path(config.STATE_FILE).parent / "photos"
     if not photo_root.exists():
         return None
-    runs = sorted((d for d in photo_root.iterdir() if d.is_dir()),
-                  reverse=True)
+    game_id = ""
+    state_path = ROOT / config.STATE_FILE
+    if state_path.exists():
+        try:
+            game_id = json.loads(state_path.read_text()).get("game_id", "")
+        except json.JSONDecodeError:
+            pass
+    runs = sorted((d for d in photo_root.iterdir()
+                   if d.is_dir() and d.name >= game_id), reverse=True)
     for run in runs:
         v = run / "verdict.md"
         if v.exists():
@@ -161,11 +169,30 @@ def payload():
         "transcript": _transcript_tail(),
         "photo_report": _photo_report(),
         "paused": (ROOT / Path(config.STATE_FILE).parent / "PAUSE").exists(),
+        "actions": _actions(),
     }
+
+
+def _actions():
+    path = ROOT / Path(config.STATE_FILE).parent / "actions.json"
+    try:
+        return json.loads(path.read_text()).get("items", [])
+    except (OSError, json.JSONDecodeError):
+        return []
 
 
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
+        if self.path == "/done":  # the table finished the DO THIS list
+            path = ROOT / Path(config.STATE_FILE).parent / "actions.json"
+            path.write_text(json.dumps({"items": []}))
+            body = b'{"ok": true}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if self.path == "/pause":  # toggle the pause flag the game honors
             flag = ROOT / Path(config.STATE_FILE).parent / "PAUSE"
             if flag.exists():
