@@ -1,0 +1,5 @@
+{
+  "name": "wolfpack seas",
+  "description": "Subs attack at 3 and cost 6 — submarine warfare dominates.",
+  "unit_stats": {"submarine": {"attack": 3, "cost": 6}}
+}

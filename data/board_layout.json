@@ -1,0 +1,514 @@
+{
+ "Afghanistan": [
+  46.1,
+  25.9
+ ],
+ "Alaska": [
+  86.1,
+  7.8
+ ],
+ "Alaska Sea Zone": [
+  83.3,
+  13.2
+ ],
+ "Algeria": [
+  28.3,
+  28.4
+ ],
+ "Anglo Sudan Egypt": [
+  36.1,
+  33.2
+ ],
+ "Angola": [
+  32.5,
+  53.8
+ ],
+ "Angola Sea Zone": [
+  29.2,
+  55.0
+ ],
+ "Antartic Sea Zone": [
+  33.3,
+  84.1
+ ],
+ "Argentina-Chile": [
+  9.7,
+  67.8
+ ],
+ "Australia": [
+  65.0,
+  61.7
+ ],
+ "Baltic Sea Zone": [
+  33.1,
+  12.0
+ ],
+ "Black Sea Zone": [
+  37.2,
+  20.5
+ ],
+ "Borneo Celebes": [
+  60.0,
+  46.5
+ ],
+ "Borneo Sea Zone": [
+  58.9,
+  44.1
+ ],
+ "Brazil": [
+  13.9,
+  52.6
+ ],
+ "Caroline Islands": [
+  69.4,
+  42.3
+ ],
+ "Caroline Islands Sea Zone": [
+  68.9,
+  44.7
+ ],
+ "Carribean Sea Zone": [
+  7.5,
+  37.5
+ ],
+ "Caspian Sea Zone": [
+  41.7,
+  21.1
+ ],
+ "Caucasus": [
+  40.0,
+  21.1
+ ],
+ "Central Mediteranean Sea Zone": [
+  32.2,
+  24.7
+ ],
+ "China": [
+  56.9,
+  27.2
+ ],
+ "Columbia": [
+  7.8,
+  44.1
+ ],
+ "Congo": [
+  33.9,
+  48.4
+ ],
+ "Congo Sea Zone": [
+  30.0,
+  49.0
+ ],
+ "Cuba": [
+  6.1,
+  33.8
+ ],
+ "East Argentina Sea Zone": [
+  12.5,
+  73.8
+ ],
+ "East Canada": [
+  6.9,
+  16.2
+ ],
+ "East Canada Sea Zone": [
+  12.5,
+  19.3
+ ],
+ "East Compass Sea Zone": [
+  54.2,
+  67.8
+ ],
+ "East Europe": [
+  33.6,
+  16.2
+ ],
+ "East Indies": [
+  57.2,
+  49.0
+ ],
+ "East Indies Sea Zone": [
+  56.4,
+  52.0
+ ],
+ "East Mediteranean Sea Zone": [
+  35.6,
+  26.5
+ ],
+ "East Pacific Sea Zone": [
+  97.2,
+  46.5
+ ],
+ "East US": [
+  5.6,
+  23.5
+ ],
+ "East US Sea Zone": [
+  8.3,
+  25.9
+ ],
+ "Eire": [
+  25.6,
+  14.4
+ ],
+ "Evenki National Okrug": [
+  54.2,
+  9.0
+ ],
+ "Finland Norway": [
+  32.8,
+  7.8
+ ],
+ "French Equatorial Africa": [
+  32.2,
+  42.9
+ ],
+ "French Indo China": [
+  56.4,
+  38.1
+ ],
+ "French Indo China Sea Zone": [
+  57.8,
+  40.5
+ ],
+ "French West Africa": [
+  26.4,
+  38.1
+ ],
+ "Germany": [
+  30.6,
+  15.6
+ ],
+ "Gibraltar": [
+  25.8,
+  25.3
+ ],
+ "Gulf of Mexico Sea Zone": [
+  2.8,
+  32.0
+ ],
+ "Hawaii Sea Zone": [
+  83.9,
+  36.2
+ ],
+ "Hawaiian Islands": [
+  84.4,
+  34.4
+ ],
+ "India": [
+  49.4,
+  33.2
+ ],
+ "Indian Ocean Sea Zone": [
+  49.4,
+  46.5
+ ],
+ "Italian East Africa": [
+  38.9,
+  41.7
+ ],
+ "Japan": [
+  66.1,
+  24.1
+ ],
+ "Japan Sea Zone": [
+  64.7,
+  25.9
+ ],
+ "Karelia S.S.R.": [
+  36.7,
+  8.4
+ ],
+ "Karelia Sea Zone": [
+  37.5,
+  4.1
+ ],
+ "Kazakh S.S.R.": [
+  46.4,
+  17.5
+ ],
+ "Kenya-Rhodesia": [
+  36.7,
+  51.4
+ ],
+ "Kwangtung": [
+  59.2,
+  32.6
+ ],
+ "Kwangtung Sea Zone": [
+  59.4,
+  35.6
+ ],
+ "Libya": [
+  32.5,
+  30.2
+ ],
+ "Madagascar": [
+  40.8,
+  58.1
+ ],
+ "Manchuria": [
+  62.5,
+  19.3
+ ],
+ "Mexico": [
+  99.4,
+  32.6
+ ],
+ "Mexico Sea Zone": [
+  0.6,
+  38.1
+ ],
+ "Midway": [
+  78.6,
+  29.6
+ ],
+ "Midway Sea Zone": [
+  78.1,
+  27.8
+ ],
+ "Mongolia": [
+  56.4,
+  18.7
+ ],
+ "Mozambique": [
+  37.5,
+  57.5
+ ],
+ "Mozambique Sea Zone": [
+  38.9,
+  59.9
+ ],
+ "New Guinea": [
+  67.5,
+  50.2
+ ],
+ "New Guinea Sea Zone": [
+  68.6,
+  52.0
+ ],
+ "New Zealand": [
+  76.1,
+  71.4
+ ],
+ "New Zealand Sea Zone": [
+  75.0,
+  69.6
+ ],
+ "North Atlantic Sea Zone": [
+  16.7,
+  19.3
+ ],
+ "North Australia Sea Zone": [
+  63.9,
+  55.0
+ ],
+ "North Brazil Sea Zone": [
+  16.7,
+  46.5
+ ],
+ "North Pacific Sea Zone": [
+  77.2,
+  19.3
+ ],
+ "North Sea Zone": [
+  25.6,
+  12.0
+ ],
+ "Novosibirsk": [
+  50.0,
+  13.2
+ ],
+ "Okinawa": [
+  63.3,
+  30.5
+ ],
+ "Okinawa Sea Zone": [
+  64.2,
+  32.0
+ ],
+ "Panama": [
+  5.6,
+  41.1
+ ],
+ "Persia": [
+  42.5,
+  27.2
+ ],
+ "Peru": [
+  6.9,
+  53.8
+ ],
+ "Peru Sea Zone": [
+  5.0,
+  55.6
+ ],
+ "Philippines": [
+  61.7,
+  39.3
+ ],
+ "Philippines Sea Zone": [
+  62.8,
+  38.7
+ ],
+ "Red Sea Zone": [
+  38.6,
+  35.6
+ ],
+ "Rio del Oro": [
+  24.2,
+  32.0
+ ],
+ "Russia": [
+  38.3,
+  12.6
+ ],
+ "Saudi Arabia": [
+  40.3,
+  32.0
+ ],
+ "Sinkiang": [
+  51.4,
+  21.7
+ ],
+ "Solomon Islands": [
+  72.5,
+  52.6
+ ],
+ "Solomon Islands Sea Zone": [
+  71.7,
+  50.8
+ ],
+ "South Africa": [
+  34.4,
+  64.7
+ ],
+ "South Africa Sea Zone": [
+  33.3,
+  69.6
+ ],
+ "South Argentina Sea Zone": [
+  8.9,
+  79.9
+ ],
+ "South Atlantic Sea Zone": [
+  23.6,
+  64.7
+ ],
+ "South Australia Sea Zone": [
+  65.3,
+  70.8
+ ],
+ "South Brazil Sea Zone": [
+  17.2,
+  61.7
+ ],
+ "South Compass Sea Zone": [
+  50.0,
+  76.8
+ ],
+ "South East Madagascar Sea Zone": [
+  42.8,
+  63.5
+ ],
+ "South Europe": [
+  31.4,
+  21.1
+ ],
+ "South Pacific Sea Zone": [
+  86.1,
+  64.7
+ ],
+ "Soviet Far East": [
+  69.4,
+  10.2
+ ],
+ "Soviet Far East Sea Zone": [
+  71.7,
+  13.2
+ ],
+ "Spain": [
+  26.7,
+  22.3
+ ],
+ "Sweden": [
+  31.9,
+  9.6
+ ],
+ "Switzerland": [
+  30.0,
+  18.4
+ ],
+ "Syria Jordan": [
+  38.1,
+  26.5
+ ],
+ "Turkey": [
+  36.9,
+  22.9
+ ],
+ "Ukraine S.S.R.": [
+  36.7,
+  17.2
+ ],
+ "United Kingdom": [
+  27.2,
+  13.8
+ ],
+ "Wake Island": [
+  74.2,
+  35.0
+ ],
+ "Wake Island Sea Zone": [
+  74.7,
+  36.8
+ ],
+ "West Africa Sea Zone": [
+  22.2,
+  39.3
+ ],
+ "West Australia Sea Zone": [
+  56.9,
+  63.5
+ ],
+ "West Canada": [
+  95.8,
+  13.2
+ ],
+ "West Canada Sea Zone": [
+  90.3,
+  16.2
+ ],
+ "West Compass Sea Zone": [
+  45.0,
+  67.8
+ ],
+ "West Europe": [
+  28.3,
+  18.1
+ ],
+ "West Mediteranean Sea Zone": [
+  28.1,
+  24.1
+ ],
+ "West Panama Sea Zone": [
+  3.9,
+  44.1
+ ],
+ "West Spain Sea Zone": [
+  24.2,
+  21.7
+ ],
+ "West US": [
+  95.0,
+  23.5
+ ],
+ "West US Sea Zone": [
+  92.8,
+  27.2
+ ],
+ "Yakut S.S.R.": [
+  63.3,
+  7.8
+ ]
+}

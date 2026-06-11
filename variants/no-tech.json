@@ -1,0 +1,5 @@
+{
+  "name": "no weapons development",
+  "description": "Pure classic combat — research disabled entirely.",
+  "config": {"WEAPONS_DEVELOPMENT": false}
+}

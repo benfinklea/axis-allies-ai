@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Axis &amp; Allies — Game Board</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --ink: #e2e6ec; --dim: #8b93a0; --panel: #161b22;
+    --line: #2c3540; --gold: #e8c35a;
+    --germany: #97a3b8; --japan: #e08a3c; --uk: #c2a36b;
+    --ussr: #d05c52; --usa: #7da45c; --neutral: #6a6f60;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); background: #0a0e14;
+         font: 13px/1.4 -apple-system, "Helvetica Neue", sans-serif; }
+  #bar { display: flex; gap: 14px; align-items: center; padding: 10px 16px;
+         background: rgba(22,27,34,.95); border-bottom: 1px solid var(--line);
+         position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  #bar .big { font-weight: 800; font-size: 16px; }
+  #bar a { color: var(--gold); text-decoration: none; }
+  #bar select, #bar button { background: var(--panel); color: var(--ink);
+        border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px;
+        font-size: 13px; cursor: pointer; max-width: 340px; }
+  #legend { display: flex; gap: 10px; font-size: 12px; color: var(--dim); }
+  #legend b { text-transform: capitalize; }
+  #ocean { position: relative; width: 100%; aspect-ratio: 2 / 1;
+           min-height: 480px;
+           background:
+             radial-gradient(1000px 500px at 30% 20%, #14304a 0%, transparent 60%),
+             radial-gradient(1200px 600px at 75% 70%, #102a40 0%, transparent 65%),
+             linear-gradient(180deg, #0d2236 0%, #0a1c2e 50%, #081726 100%); }
+  .t { position: absolute; transform: translate(-50%, -50%);
+       border-radius: 7px; padding: 3px 6px; text-align: center;
+       border: 1px solid rgba(0,0,0,.45); cursor: default; min-width: 34px;
+       box-shadow: 0 2px 6px rgba(0,0,0,.45); }
+  .t.land { background: color-mix(in srgb, var(--oc) 32%, #1b222c);
+            border-color: var(--oc); }
+  .t.sea { background: rgba(10, 30, 50, .35);
+           border: 1px dashed rgba(120,160,200,.35); border-radius: 50%;
+           padding: 4px 7px; }
+  .t.sea:not(.occupied) { display: none; }
+  .t.contested { outline: 2px solid var(--gold);
+                 box-shadow: 0 0 14px rgba(232,195,90,.5); z-index: 3; }
+  .t .nm { font-size: 9.5px; color: var(--ink); opacity: .85;
+           white-space: nowrap; max-width: 110px; overflow: hidden;
+           text-overflow: ellipsis; }
+  .t .ipc { font-size: 8.5px; color: var(--gold); opacity: .8; }
+  .t .us { font-size: 13px; line-height: 1.25; white-space: nowrap; }
+  .t .us .ct { font-size: 10px; vertical-align: top; font-weight: 700; }
+  .t .cap { position: absolute; top: -7px; right: -6px; font-size: 11px; }
+  .t:hover { z-index: 9; }
+  .t .pop { display: none; position: absolute; left: 50%; top: 105%;
+            transform: translateX(-50%); background: var(--panel);
+            border: 1px solid var(--line); border-radius: 8px;
+            padding: 8px 10px; z-index: 10; white-space: nowrap;
+            text-align: left; font-size: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,.6); }
+  .t:hover .pop { display: block; }
+  #foot { padding: 10px 16px; color: var(--dim); font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <span class="big">🗺️ A&amp;A Board</span>
+  <span id="round" class="dim"></span>
+  <select id="snapsel" onchange="loadSnap()">
+    <option value="">● LIVE game state</option>
+  </select>
+  <button onclick="step(-1)">⏪ prev</button>
+  <button onclick="step(1)">⏩ next</button>
+  <span id="legend"></span>
+  <a href="/" style="margin-left:auto">war room →</a>
+</div>
+<div id="ocean"></div>
+<div id="foot">Hover any territory for the full stack. Sea zones appear when
+occupied. Run <code>python3 simulate.py</code> and pick its snapshots above to
+replay a simulated game turn by turn.</div>
+<script>
+const COLORS = {germany:"var(--germany)", japan:"var(--japan)", uk:"var(--uk)",
+                ussr:"var(--ussr)", usa:"var(--usa)"};
+const FLAGS  = {germany:"🇩🇪", japan:"🇯🇵", uk:"🇬🇧", ussr:"☭", usa:"🇺🇸"};
+const UICON  = {infantry:"🪖", armour:"🛡️", fighter:"🛩️", bomber:"✈️",
+                aaGun:"🎯", factory:"🏭", transport:"🚢", submarine:"🔱",
+                carrier:"🛳️", battleship:"⚓"};
+let layout = null, snaps = [];
+
+document.getElementById("legend").innerHTML =
+  Object.entries(FLAGS).map(([p, f]) =>
+    `<span>${f} <b style="color:${COLORS[p]}">${p}</b></span>`).join("");
+
+async function init() {
+  layout = await (await fetch("/layout")).json();
+  await refreshSnaps();
+  tick();
+  setInterval(() => { if (!sel().value) tick(); }, 3000);
+}
+const sel = () => document.getElementById("snapsel");
+
+async function refreshSnaps() {
+  snaps = await (await fetch("/snapshots")).json();
+  const cur = sel().value;
+  sel().innerHTML = `<option value="">● LIVE game state</option>` +
+    snaps.map(s => `<option value="${s}">${s}</option>`).join("");
+  sel().value = cur && snaps.includes(cur) ? cur : "";
+}
+
+function step(dir) {
+  const i = snaps.indexOf(sel().value);
+  const next = i === -1 ? (dir > 0 ? 0 : snaps.length - 1) : i + dir;
+  sel().value = (next < 0 || next >= snaps.length) ? "" : snaps[next];
+  loadSnap();
+}
+async function loadSnap() { tick(); }
+
+async function tick() {
+  const q = sel().value ? `?snapshot=${encodeURIComponent(sel().value)}` : "";
+  const d = await (await fetch("/data" + q)).json();
+  if (!d.powers) return;
+  document.getElementById("round").textContent = sel().value
+    ? `snapshot: ${sel().value}`
+    : `Round ${d.round} — ${String(d.turn).toUpperCase()} (${d.phase})`;
+  render(d);
+}
+
+function render(d) {
+  const ocean = document.getElementById("ocean");
+  const caps = {};
+  d.powers.forEach(p => caps[p.capital] = p.power);
+  ocean.innerHTML = d.territories.map(t => {
+    const pos = layout[t.name];
+    if (!pos) return "";
+    const occupied = Object.keys(t.units).length > 0;
+    const stacks = Object.entries(t.units).map(([p, us]) =>
+      `<div class="us" style="color:${COLORS[p]}">` +
+      Object.entries(us).map(([u, n]) =>
+        `${UICON[u] || "▪"}<span class="ct">${n > 1 ? n : ""}</span>`)
+        .join(" ") + `</div>`).join("");
+    const pop = `<div class="pop"><b>${esc(t.name)}</b>` +
+      (t.owner ? ` — ${FLAGS[t.owner] || ""} ${t.owner}` : "") +
+      (t.ipc ? ` · 💵${t.ipc}` : "") +
+      Object.entries(t.units).map(([p, us]) =>
+        `<div style="color:${COLORS[p]}">${FLAGS[p] || ""} ${p}: ` +
+        Object.entries(us).map(([u, n]) => `${n} ${u}`).join(", ") +
+        `</div>`).join("") + `</div>`;
+    return `<div class="t ${t.water ? "sea" : "land"}
+                 ${occupied ? "occupied" : ""} ${t.contested ? "contested" : ""}"
+                 style="left:${pos[0]}%; top:${pos[1]}%;
+                        --oc:${COLORS[t.owner] || "var(--neutral)"}">
+        ${caps[t.name] ? `<span class="cap">⭐</span>` : ""}
+        <div class="nm">${esc(short(t.name))}</div>
+        ${t.ipc && !t.water ? `<div class="ipc">${t.ipc}</div>` : ""}
+        ${stacks}${pop}</div>`;
+  }).join("");
+}
+
+const short = n => n.replace(" Sea Zone", "").replace(" S.S.R.", "");
+const esc = s => String(s ?? "").replace(/[&<>"]/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+init();
+</script>
+</body>
+</html>

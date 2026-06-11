@@ -1,0 +1,6 @@
+{
+  "name": "lend-lease",
+  "description": "Allies start richer; Axis must win faster.",
+  "config": {"ECON_VICTORY_AXIS_INCOME": 78},
+  "setup": {"ipcs": {"ussr": 30, "uk": 36, "usa": 42}}
+}

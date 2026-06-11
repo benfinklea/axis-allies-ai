@@ -23,7 +23,42 @@ import config            # noqa: E402
 import state as S        # noqa: E402
 
 HTML_PATH = Path(__file__).resolve().parent / "viewer.html"
+BOARD_PATH = Path(__file__).resolve().parent / "board.html"
+LAYOUT_PATH = ROOT / "data" / "board_layout.json"
 MAX_HISTORY = 60         # most recent messages per power sent to the browser
+
+
+def _snapshot_list():
+    """Snapshot files the board can replay, as paths relative to logs/.
+    Live game snapshots first, then simulation runs (newest first)."""
+    base = ROOT / "logs"
+    found = []
+    for pattern in ("snapshots/*.json", "sim/*/g*/snapshots/*.json"):
+        found += base.glob(pattern)
+    groups = {}
+    for p in found:
+        groups.setdefault(str(p.relative_to(base).parent), []).append(p)
+    out = []
+    for gdir in sorted(groups, key=lambda g: max(p.stat().st_mtime
+                                                 for p in groups[g]),
+                       reverse=True)[:12]:  # newest 12 games/runs
+        out += [str(p.relative_to(base)) for p in
+                sorted(groups[gdir], key=lambda p: p.stat().st_mtime)]
+    return out
+
+
+def _load_snapshot(rel):
+    """Load a snapshot by logs/-relative path; refuses path escapes."""
+    if not rel or ".." in rel or rel.startswith("/") \
+            or not rel.endswith(".json"):
+        return None
+    path = (ROOT / "logs" / rel).resolve()
+    if not str(path).startswith(str((ROOT / "logs").resolve())):
+        return None
+    try:
+        return json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
 
 
 def _pretty(content):
@@ -149,12 +184,13 @@ def _transcript_tail(n=80):
     return lines[-n:]
 
 
-def payload():
+def payload(st_override=None):
     """Always serves whatever exists — transcript and AI minds update live
-    even before the game writes its first state checkpoint."""
+    even before the game writes its first state checkpoint. st_override
+    renders a snapshot (board replay) instead of the live state."""
     state_path = ROOT / config.STATE_FILE
-    st = None
-    if state_path.exists():
+    st = st_override
+    if st is None and state_path.exists():
         try:
             st = json.loads(state_path.read_text())
         except json.JSONDecodeError:
@@ -351,12 +387,27 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path.split("?")[0] == "/data":
+        route, _, query = self.path.partition("?")
+        if route == "/data":
+            snap = None
+            for part in query.split("&"):
+                if part.startswith("snapshot="):
+                    from urllib.parse import unquote
+                    snap = _load_snapshot(unquote(part[9:]))
             try:
-                body = json.dumps(payload()).encode()
+                body = json.dumps(payload(st_override=snap)).encode()
             except Exception as e:  # never leave the page frozen on a 500
                 body = json.dumps({"error": str(e)}).encode()
             ctype = "application/json"
+        elif route == "/layout":
+            body = LAYOUT_PATH.read_bytes()
+            ctype = "application/json"
+        elif route == "/snapshots":
+            body = json.dumps(_snapshot_list()).encode()
+            ctype = "application/json"
+        elif route == "/board":
+            body = BOARD_PATH.read_bytes()
+            ctype = "text/html; charset=utf-8"
         else:
             body = HTML_PATH.read_bytes()
             ctype = "text/html; charset=utf-8"
