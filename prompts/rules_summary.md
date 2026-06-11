@@ -51,6 +51,12 @@ target has nowhere to land and the move is ILLEGAL. Fighters may land on
 friendly carriers. Plan every air strike as a round trip — count the
 spaces back to friendly ground before declaring it.
 
+## No passing through the enemy (ENFORCED)
+Ships and land units STOP when they enter an enemy-occupied space — they
+stay and fight there. A 2-move ship or tank cannot pass through a zone or
+territory holding enemy units on its way somewhere else. Only aircraft
+fly over the enemy.
+
 ## Weapons Development (IN PLAY)
 Each research die costs 5 IPCs; a roll of 6 is a breakthrough — a second die
 then determines which technology you receive: 1 jet power (fighters defend

@@ -90,9 +90,11 @@ def hostile_powers_in(state, terr, power):
     return [p for p in units_in(state, terr) if is_enemy(power, p)]
 
 
-def reachable(start, max_moves, allowed):
+def reachable(start, max_moves, allowed, transit=None):
     """Territories within max_moves steps of start, where allowed(t) gates
-    every intermediate AND final territory. Returns {territory: distance}."""
+    every territory entered, and transit(t) additionally gates passing
+    THROUGH t (enter-and-stop is always fine — that's an attack). Returns
+    {territory: distance}."""
     seen = {start: 0}
     frontier = [start]
     for dist in range(1, max_moves + 1):
@@ -101,7 +103,8 @@ def reachable(start, max_moves, allowed):
             for adj in TERR[t]["adjacent"]:
                 if adj not in seen and allowed(adj):
                     seen[adj] = dist
-                    nxt.append(adj)
+                    if transit is None or transit(adj):
+                        nxt.append(adj)
         frontier = nxt
     seen.pop(start, None)
     return seen
@@ -158,17 +161,29 @@ def check_move(state, power, units, src, dst, combat_air_landing=False):
             return f"unknown unit type {u}"
         if have.get(u, 0) < n:
             return f"only {have.get(u, 0)} {u} in {src}"
+    # ships and land units stop when they enter an enemy-occupied space —
+    # no passing through (rulebook: a submarine's first zone in a 2-zone
+    # move "must be unoccupied... or occupied by units of your alliance").
+    # Air flies over anything.
+    clear = lambda t: not hostile_powers_in(state, t, power)
     for u, n in units.items():
         mv = STATS[u]["movement"]
+        transit = clear
         if u in LAND_UNITS:
             ok = lambda t: not TERR[t]["water"]
         elif u in SEA_UNITS:
             ok = lambda t: TERR[t]["water"]
         else:  # air
             ok = lambda t: True
+            transit = None
             mv = air_movement(state, power, u)
-        if dst not in reachable(src, mv, ok):
-            return f"{u} cannot reach {dst} from {src} (move {mv})"
+        if dst not in reachable(src, mv, ok, transit):
+            blocked = (mv > 1 and transit is not None
+                       and dst in reachable(src, mv, ok))
+            return (f"{u} cannot reach {dst} from {src}: the path passes "
+                    f"through an enemy-occupied space — units must stop "
+                    f"and fight where they meet the enemy" if blocked else
+                    f"{u} cannot reach {dst} from {src} (move {mv})")
         if combat_air_landing and u in AIR_UNITS:
             issue = air_landing_issue(state, power, u, src, dst)
             if issue:
