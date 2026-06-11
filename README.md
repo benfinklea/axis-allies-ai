@@ -1,93 +1,74 @@
-# Axis & Allies: Five AIs, One Board
+# axis-allies-ai
 
-Five different AIs — one per power — play classic **Axis & Allies (Milton
-Bradley, 2nd edition)** against each other on a **physical board**. The humans
-at the table are the hands: they move the plastic, roll the dice, and watch the
-war unfold. An old Mac runs the orchestrator, announces every move out loud,
-and keeps the authoritative game state.
+Five AIs play classic **Axis & Allies** (Milton Bradley 2nd edition, 1942
+setup) on a **physical board**. A Python orchestrator keeps the game state,
+talks to all five model providers, narrates the war out loud, and takes
+physical dice rolls from a web form. The humans at the table move the
+plastic — and referee the weird stuff.
 
-| Power | AI (game one) |
-|---|---|
-| USSR | GLM-4.5-Air (local, thinking mode) |
-| Germany | ChatGPT |
-| UK | Gemini |
-| Japan | Claude Fable 5 |
-| USA | Qwen3-235B (local, thinking mode) |
+| Power | AI | Voice |
+|---|---|---|
+| 🇩🇪 Germany | GPT-5.x Codex | Jamie (Premium) |
+| 🇯🇵 Japan | Claude Fable 5 | Oliver (Enhanced) |
+| 🇬🇧 United Kingdom | Gemini 3.1 Pro | Kate (Enhanced) |
+| ☭ USSR | GLM-4.5-Air (local) | Stephanie (Enhanced) |
+| 🇺🇸 United States | Qwen3-235B (local) | Ava (Premium) |
 
-Bench: Qwen3-Coder and Gemma 3 27B (local), DeepSeek (API) as a candidate
-swap-in for game two. Power assignments are config, not code — reshuffle every
-game and keep a standings table across games.
+All five route through one OpenAI-compatible fleet gateway; the frontier
+powers ride existing subscriptions, the locals run on home-lab GPUs — games
+cost $0 in API spend.
 
-> **Note:** This folder is staged inside the `cmf` repo only because the
-> planning session was scoped here. It is self-contained and should be moved
-> to its own repository (`axis-allies-ai`) as the project root.
-
-## Design principles
-
-1. **Text state is the ground truth, not photos.** Vision models can't reliably
-   count stacked miniatures across a big board. The orchestrator keeps the game
-   state as JSON; the AIs play from that. Phone photos are an optional periodic
-   sanity check, not the input pipeline.
-2. **Humans never type moves.** The AIs *generate* the moves (as structured
-   JSON), the script applies them to the state and speaks them aloud via macOS
-   `say`. The humans' only typed input is physical dice results — a short digit
-   string per battle round.
-3. **The script is a scorekeeper, not a rules lawyer.** It validates the easy
-   stuff (IPC math, unit existence, territory adjacency) and trusts the humans
-   at the table to referee edge cases, exactly like a normal game night.
-4. **Five minds, two alliances.** Allied powers are played by *different* AIs.
-   A configurable "war council" lets allies share their strategic reasoning
-   with each other each round — or not, if you want them stepping on each
-   other's plans like real coalition partners.
-
-## Locked decisions
-
-- **Edition:** Classic A&A, Milton Bradley 2nd edition.
-- **Dice:** physical, rolled at the table, entered as a digit string.
-- **Casualties:** always chosen by the owning AI (never auto-assigned).
-- **Players:** five AIs, one per power, provider-pluggable per config.
-
-## What a turn looks like at the table
-
-1. Mac announces: *"Germany's turn. Purchasing units…"*
-2. Germany's AI returns purchases as JSON → script deducts IPCs, speaks them.
-3. Combat moves arrive as JSON → script speaks each one → you move the plastic.
-4. For each battle: you roll real dice and type the results, the AIs choose
-   their casualties and whether to press or retreat. Script narrates rounds.
-5. Noncombat moves, unit placement, income collection — same pattern.
-6. Next power. Repeat until a side holds the enemy capitals.
-
-## Rules in play
-
-Weapons Development **on** · Economic victory **on** (Axis income ≥ 84) ·
-War council **on** · Physical dice · AI-chosen casualties.
-
-## Running it
+## Game night
 
 ```sh
-pip3 install -r requirements.txt
-python3 selftest.py                  # offline smoke test — no API keys needed
-python3 game.py --stub               # full table experience (speech, dice) with stub AIs
-python3 tools/smoke_providers.py     # one tiny live call per provider — all five must say OK
-python3 game.py --new                # the real thing
+export FLEET_API_KEY=$(cat ~/.config/fleet/key)
+./play --new                      # fresh game (./play resumes a saved one)
+python3 tools/viewer.py           # war room + board, http://localhost:8484
 ```
 
-Working on this repo with Claude Code? `CLAUDE.md` briefs the assistant on
-the locked decisions, code map, and a troubleshooting table.
+- **War room** (`/`): per-power cards with each AI's live thinking, full
+  AI conversations, war-council channels, battle log, photo checks, table
+  transcript — plus the table controls: ⏸ pause, 🔇 mute, 🛑 end / ▶ start
+  game, ⏪ back up one turn, the gold **DO THIS** checklist with its Done
+  button, and the **battle board** dice form (attackers left, defenders
+  right, all rolls in one submit).
+- **Game board** (`/board`): the world map with every territory, stack,
+  capital and contested space — plus a snapshot scrubber that replays any
+  live or simulated game turn by turn.
+- **Photo verification**: snap the board (AirDrop is fastest), then
+  `python3 photos.py --airdrop --count N` — a vision model inventories the
+  photos blind and a deterministic diff reports what's missing/extra vs the
+  engine.
 
-Set `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, and fill in the
-two local `base_url`s in `config.py`. State auto-saves to `logs/state.json`
-after every turn — `python3 game.py` resumes mid-game (table sessions can
-span evenings).
+The engine enforces the classic rules it knows (movement legality, air
+landing, stop-on-contact, sub withdrawal, retreat paths, placement rules…)
+and every AI re-reads the governing rulebook sections, per phase, before it
+acts. Illegal plans bounce back privately until they're legal. Everything
+spoken, decided, and rolled lands in one JSONL corpus per game under
+`logs/games/` — the raw material for judging AIs across games.
 
-The board data in `data/` is converted from the open-source TripleA project's
-classic 2nd-edition map (`tools/convert_triplea.py`), so adjacency, IPC
-values, and the starting setup are battle-tested — spot-check a few
-territories against your board rather than transcribing anything.
+## Fast simulations & rule variants
 
-## Status
+```sh
+python3 simulate.py                              # 5 headless games, <1s each
+python3 simulate.py --games 50 --seed 42         # reproducible batches
+python3 simulate.py --variant variants/rich-allies.json
+python3 simulate.py --model fast                 # all powers on a real AI
+```
 
-Engine, data, stub player, and both API adapters are built; offline selftest
-passes (two full rounds + combat resolution). Remaining: fill in local
-base_urls, live smoke test each provider, first real game. See
-[PLAN.md](PLAN.md) for architecture and milestones.
+Variants are plain JSON — config toggles, unit-stat overrides, setup
+tweaks — see `variants/`. Every sim records per-turn snapshots you can
+replay on `/board`.
+
+## Layout
+
+- `game.py` — the 6-step action sequence per turn, validation loops, table gates
+- `state.py` / `engine/` — board state, movement legality, battle resolution, dice
+- `players/` — AI adapters (OpenAI-compatible via the gateway) + offline stub
+- `prompts/` — rules summary + distilled rulebook KB injected per phase
+- `tools/` — viewer/board web UI, TripleA map converter, provider smoke test
+- `data/` — map, setup, and board layout (generated; don't hand-edit)
+- `selftest.py` — offline invariants; keep it green
+
+Classic 2nd-edition rulebook scan + OCR stay local (gitignored) — the repo
+is public.

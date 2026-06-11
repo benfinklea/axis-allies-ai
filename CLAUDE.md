@@ -101,9 +101,14 @@ Then configure the live providers:
   research, combat, noncombat, mobilize, income, debrief (spoken turn recap).
 - `gamelog.py` — one JSONL per game in `logs/games/` (every prompt, reply,
   spoken line, dice roll, result) — the corpus for judging AIs across games.
-- `tools/viewer.py` + `viewer.html` — live web viewer (`python3
+- `tools/viewer.py` + `viewer.html` — live web war room (`python3
   tools/viewer.py`, port 8484): per-power cards with model + latest thinking,
-  click-through full AI conversations, war-council channels, transcript, board.
+  click-through full AI conversations, war-council channels, transcript,
+  battle log, dice battle-board, DO THIS/Done, pause/mute/end/backup.
+- `tools/board.html` (`/board`) — world-map game board with snapshot
+  scrubber; layout from `data/board_layout.json` (tools/gen_board_layout.py).
+- `simulate.py` — headless fast games (`--variant variants/*.json` for rule
+  experiments, `--model <intent>` for real-AI sims); runs under `logs/sim/`.
 - `state.py` — board state, BFS movement legality, capture/loot, AI text summary.
 - `engine/combat.py` — battle rounds: AA, sub surprise, casualties, retreat.
 - `engine/dice.py` — manual digit-string entry or auto-roll.
