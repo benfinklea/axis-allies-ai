@@ -256,6 +256,10 @@
       <h2>📻 Table transcript</h2>
       <div class="feed" id="transcript"></div>
     </div>
+    <div class="panel">
+      <h2>⚔️ Battle log — check the board against each card</h2>
+      <div class="feed" id="battles"></div>
+    </div>
     <div class="panel" id="photo-panel">
       <h2>📷 Photo check <span id="photo-when" class="dim"></span></h2>
       <pre id="photo-report">no photo check yet — AirDrop board shots and run photos.py</pre>
@@ -388,6 +392,16 @@ function render() {
   tr.innerHTML = data.transcript.slice().reverse().map(l =>
     `<div class="note">${esc(l)}</div>`).join("")
     || `<div class="note sys">📭 nothing spoken yet</div>`;
+
+  document.getElementById("battles").innerHTML =
+    (data.battles || []).slice().reverse().map(b => `
+      <div class="note">
+        <div><b>⚔️ ${esc(b.territory)}</b> — ${esc(b.who)}
+          <span class="ghint">(round ${b.round ?? "?"})</span></div>
+        ${b.events.map(ev => `<div class="ghint">• ${esc(ev)}</div>`).join("")}
+        <div>${b.outcome ? "🏁 " + esc(b.outcome) : "⏳ in progress…"}</div>
+      </div>`).join("")
+    || `<div class="note sys">📭 no battles yet</div>`;
 
   if (data.photo_report) {
     document.getElementById("photo-when").textContent =

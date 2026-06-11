@@ -9,6 +9,13 @@ def _hits(rolls, target):
     return sum(1 for r in rolls if r <= target)
 
 
+def _combatants(units):
+    """AA guns and factories are never combat casualties — the rulebook:
+    'AA guns are never destroyed'; both transfer with the territory."""
+    return {u: n for u, n in units.items()
+            if u not in ("aaGun", "factory") and n}
+
+
 def _firepower(units, role, tech=()):
     """[(unit, count, to-hit)] for attack/defense, with classic tech bumps."""
     out = []
@@ -56,14 +63,15 @@ def resolve_battle(state, terr, attacker, ui):
     rnd = 0
     while True:
         rnd += 1
-        atk_units = S.units_in(state, terr, attacker)
-        def_by_power = {p: S.units_in(state, terr, p) for p in defenders}
+        atk_units = _combatants(S.units_in(state, terr, attacker))
+        def_by_power = {p: _combatants(S.units_in(state, terr, p))
+                        for p in defenders}
         def_by_power = {p: u for p, u in def_by_power.items() if u}
         if not any(u for u in atk_units.values() if u):
             ui.speak(f"{attacker}'s attack on {terr} is wiped out.")
             return "defender"
         if not def_by_power:
-            break  # attacker holds the field
+            break  # attacker holds the field (AA guns don't hold it)
 
         ui.speak(f"{terr}, combat round {rnd}.")
         tech_a = state["tech"].get(attacker, [])
@@ -135,7 +143,7 @@ def resolve_battle(state, terr, attacker, ui):
                     removals += [f"Remove {p} {n} {u} from {terr}"
                                  for u, n in lost.items()]
         if def_hits:
-            pool = S.units_in(state, terr, attacker)
+            pool = _combatants(S.units_in(state, terr, attacker))
             take = min(def_hits, sum(pool.values()))
             if take:
                 lost = ui.ask_casualties(attacker, pool, take, terr)
@@ -164,7 +172,8 @@ def resolve_battle(state, terr, attacker, ui):
                     ui.speak(f"{p}'s submarines withdraw from {terr} "
                              f"to {dest}.")
 
-        defenders = S.hostile_powers_in(state, terr, attacker)
+        defenders = [p for p in S.hostile_powers_in(state, terr, attacker)
+                     if _combatants(S.units_in(state, terr, p))]
         if defenders and S.units_in(state, terr, attacker):
             choice = ui.ask_press(attacker, terr)
             if choice.get("action") == "retreat":
@@ -186,10 +195,23 @@ def resolve_battle(state, terr, attacker, ui):
         has_land = any(u in S.LAND_UNITS for u in S.units_in(state, terr, attacker))
         if has_land:
             S.capture(state, terr, attacker)
-            ui.speak(f"{attacker} captures {terr}!")
+            # AA guns and factories are never destroyed: they transfer
+            captured = []
+            for p in list(state["units"].get(terr, {})):
+                if S.is_enemy(attacker, p):
+                    leftovers = S.units_in(state, terr, p)
+                    if leftovers:
+                        S.remove_units(state, terr, p, leftovers)
+                        S.add_units(state, terr, attacker, leftovers)
+                        captured += [f"{n} {u}" for u, n in leftovers.items()]
+            ui.speak(f"{attacker} captures {terr}!"
+                     + (f" Captured intact: {', '.join(captured)}."
+                        if captured else ""))
             ui.table_removals(terr, [
                 f"{attacker} captures {terr}: move the surviving attackers "
-                f"in and flip its control marker to {attacker}"])
+                f"in and flip its control marker to {attacker}"
+                + (f" (the {', '.join(captured)} now belong to {attacker} "
+                   f"— leave them in place)" if captured else "")])
         else:
             ui.speak(f"{attacker} wins the air battle over {terr} but cannot "
                      f"capture without land units.")

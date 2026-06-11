@@ -98,6 +98,46 @@ def _photo_report():
     return None
 
 
+def _battles():
+    """Battle summaries parsed from the current game's corpus log — one
+    card per battle so the table can verify the board afterward."""
+    state_path = ROOT / config.STATE_FILE
+    try:
+        game_id = json.loads(state_path.read_text()).get("game_id")
+    except (OSError, json.JSONDecodeError):
+        return []
+    log = ROOT / Path(config.STATE_FILE).parent / "games" / f"{game_id}.jsonl"
+    if not log.exists():
+        return []
+    battles, current = [], None
+    keep = ("combat round", "loses", "Surprise strike", "AA fire",
+            "withdraw", "Press done")
+    enders = ("captures", "wiped out", "wins the air battle",
+              "controls the sea zone", "retreats from")
+    for line in log.read_text().splitlines():
+        try:
+            e = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if e.get("e") != "say":
+            continue
+        text = e.get("text", "")
+        if text.startswith("Battle in "):
+            head = text[len("Battle in "):].rstrip(".")
+            terr, _, rest = head.partition(": ")
+            current = {"territory": terr, "who": rest,
+                       "round": e.get("round"), "events": [], "outcome": ""}
+            battles.append(current)
+        elif current is not None:
+            if any(k in text for k in enders):
+                current["outcome"] = text
+                current = None
+            elif "loses" in text or "Surprise strike" in text \
+                    or "AA fire" in text or "withdraw" in text:
+                current["events"].append(text)
+    return battles[-25:]
+
+
 def _transcript_tail(n=80):
     path = ROOT / config.TRANSCRIPT
     if not path.exists():
@@ -168,6 +208,7 @@ def payload():
         "econ_threshold": (config.ECON_VICTORY_AXIS_INCOME
                            if config.ECONOMIC_VICTORY else None),
         "transcript": _transcript_tail(),
+        "battles": _battles(),
         "photo_report": _photo_report(),
         "paused": (ROOT / Path(config.STATE_FILE).parent / "PAUSE").exists(),
         "muted": (ROOT / Path(config.STATE_FILE).parent / "MUTE").exists(),
