@@ -48,6 +48,9 @@ def resolve_battle(state, terr, attacker, ui):
             lost = ui.ask_casualties(attacker, air, shot_down, terr, aa_fire=True)
             S.remove_units(state, terr, attacker, lost)
             ui.speak(f"AA fire downs {shot_down} aircraft.")
+            ui.table_removals(terr, [
+                f"Remove {attacker} {n} {u} from {terr} (AA fire)"
+                for u, n in lost.items()])
             atk_units = S.units_in(state, terr, attacker)
 
     rnd = 0
@@ -117,6 +120,9 @@ def resolve_battle(state, terr, attacker, ui):
                        for g in groups if g["side"] == "defender")
 
         # Casualties — AI-chosen, simultaneous removal
+        removals = [f"Remove {p} {n} {u} from {terr} (surprise strike)"
+                    for p, lost in pre_removed.items()
+                    for u, n in lost.items()]
         if atk_hits:
             remaining = atk_hits
             for p in list(def_by_power):
@@ -126,12 +132,18 @@ def resolve_battle(state, terr, attacker, ui):
                     lost = ui.ask_casualties(p, pool, take, terr)
                     S.remove_units(state, terr, p, lost)
                     remaining -= sum(lost.values())
+                    removals += [f"Remove {p} {n} {u} from {terr}"
+                                 for u, n in lost.items()]
         if def_hits:
             pool = S.units_in(state, terr, attacker)
             take = min(def_hits, sum(pool.values()))
             if take:
                 lost = ui.ask_casualties(attacker, pool, take, terr)
                 S.remove_units(state, terr, attacker, lost)
+                removals += [f"Remove {attacker} {n} {u} from {terr}"
+                             for u, n in lost.items()]
+        if removals:
+            ui.table_removals(terr, removals)
 
         # Classic special: surviving DEFENDING submarines may withdraw to an
         # adjacent friendly/unoccupied sea zone after the exchange. (A full
@@ -175,6 +187,9 @@ def resolve_battle(state, terr, attacker, ui):
         if has_land:
             S.capture(state, terr, attacker)
             ui.speak(f"{attacker} captures {terr}!")
+            ui.table_removals(terr, [
+                f"{attacker} captures {terr}: move the surviving attackers "
+                f"in and flip its control marker to {attacker}"])
         else:
             ui.speak(f"{attacker} wins the air battle over {terr} but cannot "
                      f"capture without land units.")

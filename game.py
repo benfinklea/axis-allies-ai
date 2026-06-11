@@ -164,6 +164,12 @@ class UI:
         self.speak(f"{power} loses " + ", ".join(f"{n} {u}" for u, n in remove.items()))
         return remove
 
+    def table_removals(self, terr, items):
+        """Combat outcome for the humans: list the pieces to take off the
+        board (and any capture bookkeeping), wait for Done."""
+        post_actions(items)
+        await_done(self.table, items)
+
     def ask_sub_withdraw(self, power, terr, n_subs, dests):
         """Classic special: defending submarines may withdraw after a round
         of fire, to an adjacent friendly or unoccupied sea zone."""
