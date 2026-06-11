@@ -358,15 +358,21 @@ def apply_moves(state, table, power, decision, combat_allowed):
             table.note(f"Illegal move bounced ({err}).")
             continue
         defenders = S.hostile_powers_in(state, mv["to"], power)
+        # ferried land units: flag it so the table loads the transports
+        land_ok = lambda t: not S.TERR[t]["water"]
+        amphib = (any(u in S.LAND_UNITS for u in units)
+                  and mv["to"] not in S.reachable(mv["from"], 2, land_ok))
         S.apply_move(state, power, units, mv["from"], mv["to"])
         S.note_air_moves(state, power, units, mv["from"], mv["to"],
                          combat=combat_allowed)
         desc = ", ".join(f"{n} {u}" for u, n in units.items())
         attack_tag = (f" — ATTACKING {' and '.join(defenders)} there"
                       if defenders else "")
-        if combat_allowed and defenders:
-            # remember where this attack came from: retreats may only
-            # fall back to one of these origins
+        if amphib:
+            attack_tag += " — AMPHIBIOUS: load onto transport, sail, unload"
+        if combat_allowed and defenders and not amphib:
+            # remember where this attack came from: retreats may only fall
+            # back to one of these origins (landed troops never retreat)
             origins = state.setdefault("attack_origins", {}) \
                            .setdefault(mv["to"], [])
             if mv["from"] not in origins:
