@@ -73,7 +73,8 @@ LATLON = {
     "West Panama Sea Zone": (4, -86), "West US Sea Zone": (32, -126),
 }
 
-SPLIT = -100  # board edge runs through the Americas, like the printed map
+SPLIT = -30  # board edge runs through the mid-Atlantic: every landmass
+# (Americas, Eurasia, Pacific) stays contiguous; only open ocean wraps
 
 
 def project(lat, lon):
