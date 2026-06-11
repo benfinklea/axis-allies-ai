@@ -183,10 +183,7 @@ def resolve_battle(state, terr, attacker, ui):
             choice = ui.ask_press(attacker, terr)
             if choice.get("action") == "retreat":
                 dest = choice.get("retreat_to")
-                origins = [o for o in
-                           state.get("attack_origins", {}).get(terr, [])
-                           if not S.hostile_powers_in(state, o, attacker)]
-                if dest in origins:
+                if dest in S.retreat_options(state, attacker, terr):
                     S.apply_move(state, attacker,
                                  S.units_in(state, terr, attacker), terr, dest)
                     ui.speak(f"{attacker} retreats from {terr} to {dest}.")

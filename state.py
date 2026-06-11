@@ -250,6 +250,25 @@ def air_spent_brief(state, power):
             + "\n".join(lines))
 
 
+def retreat_options(state, power, terr):
+    """Legal retreat destinations: ADJACENT spaces of the battle that the
+    attack came through. A multi-zone naval attack retreats one space back
+    along its path (the pass-through hop), never the full distance home."""
+    adj = TERR[terr]["adjacent"]
+    opts = set()
+    for origin in state.get("attack_origins", {}).get(terr, []):
+        if origin in adj:
+            if not hostile_powers_in(state, origin, power):
+                opts.add(origin)
+        else:  # 2-space move: the way back is the intermediate hop
+            for mid in adj:
+                if mid in TERR[origin]["adjacent"] \
+                        and TERR[mid]["water"] == TERR[origin]["water"] \
+                        and not hostile_powers_in(state, mid, power):
+                    opts.add(mid)
+    return sorted(opts)
+
+
 def amphibious_ok(state, power, src, dst):
     """Permissive ferry check for land units crossing water: both ends are
     land with coasts, a sea route of <=2 zones links them, and a friendly

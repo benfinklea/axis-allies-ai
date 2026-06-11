@@ -32,7 +32,7 @@ PLAYERS = {
         "model": "codex",                # GPT-5.x Codex via ChatGPT subscription
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Daniel",
+        "voice": "Jamie (Premium)",
     },
     "japan": {
         # "fable" is free on the Claude plan through Jun 22, 2026; after that
@@ -41,21 +41,21 @@ PLAYERS = {
         "model": "fable",                # Claude Fable 5 via Claude plan
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Reed (English (US))",
+        "voice": "Oliver (Enhanced)",
     },
     "uk": {
         "provider": "openai_compat",
         "model": "gemini",               # Gemini 3.1 Pro via subscription
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Moira",
+        "voice": "Kate (Enhanced)",
     },
     "ussr": {
         "provider": "openai_compat",
         "model": "code-glm",             # GLM-4.5-Air 106B on gandalf
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Karen",
+        "voice": "Stephanie (Enhanced)",
     },
     "usa": {
         # "big" shares gandalf with ussr's "code-glm" and they evict each
@@ -67,7 +67,7 @@ PLAYERS = {
         "model": "big",                  # Qwen3-235B-A22B on gandalf
         "base_url": FLEET_BASE_URL,
         "api_key_env": "FLEET_API_KEY",
-        "voice": "Samantha",
+        "voice": "Ava (Premium)",
     },
 }
 

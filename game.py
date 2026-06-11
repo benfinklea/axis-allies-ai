@@ -197,15 +197,14 @@ class UI:
         mine = S.units_in(self.state, terr, power)
         theirs = {p: S.units_in(self.state, terr, p)
                   for p in S.hostile_powers_in(self.state, terr, power)}
-        origins = [o for o in
-                   self.state.get("attack_origins", {}).get(terr, [])
-                   if not S.hostile_powers_in(self.state, o, power)]
+        options = S.retreat_options(self.state, power, terr)
         retreat_help = (f"If you retreat, ALL surviving attackers fall back "
-                        f"together, the way they came, to exactly ONE of "
-                        f"these spaces: {origins}. No other destination is "
-                        f"legal." if origins else
+                        f"together ONE space, the way they came, to exactly "
+                        f"ONE of: {options}. No other destination is legal "
+                        f"(a retreat is always a single adjacent space)."
+                        if options else
                         "Retreat is NOT possible for this battle (no "
-                        "friendly origin space to fall back to).")
+                        "friendly adjacent space to fall back to).")
         prompt = (f"The battle for {terr} continues. Your remaining "
                   f"attackers: {json.dumps(mine)}. Defenders still "
                   f"standing: {json.dumps(theirs)}. Press the attack or "
