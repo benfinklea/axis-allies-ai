@@ -143,6 +143,10 @@
              border: 1px solid var(--line); border-radius: 10px;
              padding: 6px 16px; font-size: 14px; font-weight: 700; }
   #mutebtn.muted { background: var(--axis); color: #fff; }
+  #gamebtn { border: none; border-radius: 10px; padding: 6px 16px;
+             font-size: 14px; font-weight: 800; cursor: pointer;
+             background: var(--axis); color: #fff; }
+  #gamebtn.stopped { background: #3f7a46; }
   #todo { display: none; margin: 14px 20px 0; padding: 14px 18px;
           background: linear-gradient(180deg, #2a2410, #1d1a10);
           border: 2px solid var(--gold); border-radius: 12px;
@@ -185,6 +189,7 @@
   </div>
   <button id="pausebtn" onclick="togglePause()">⏸ Pause</button>
   <button id="mutebtn" onclick="toggleMute()">🔊 Sound on</button>
+  <button id="gamebtn" onclick="gameControl()">🛑 End game</button>
   <span id="status"></span>
 </div>
 <div id="dicebox">
@@ -268,6 +273,11 @@ function render() {
   const mb = document.getElementById("mutebtn");
   mb.textContent = data.muted ? "🔇 Muted" : "🔊 Sound on";
   mb.classList.toggle("muted", data.muted);
+  const gb = document.getElementById("gamebtn");
+  gb.textContent = data.running ? "🛑 End game" : "▶️ Start the game";
+  gb.classList.toggle("stopped", !data.running);
+  if (!data.running && data.round)
+    document.getElementById("roundline").textContent = "🛑 No game running";
   const todo = document.getElementById("todo");
   todo.classList.toggle("show", (data.actions || []).length > 0);
   document.getElementById("todo-items").innerHTML =
@@ -415,6 +425,14 @@ async function markDone() {
 async function toggleMute() {
   await fetch("/mute", {method: "POST"});
   tick();
+}
+async function gameControl() {
+  const running = document.getElementById("gamebtn").textContent.includes("End");
+  if (running && !confirm("End the current game? A new one starts from scratch."))
+    return;
+  await fetch("/game", {method: "POST",
+                        body: JSON.stringify({action: running ? "stop" : "start"})});
+  setTimeout(tick, 800);
 }
 async function sendRoll(e) {
   e.preventDefault();

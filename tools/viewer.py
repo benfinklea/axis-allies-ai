@@ -11,6 +11,7 @@ in the browser every 2 seconds. Touches nothing — safe to leave open during
 a game.
 """
 import json
+import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -170,8 +171,9 @@ def payload():
         "photo_report": _photo_report(),
         "paused": (ROOT / Path(config.STATE_FILE).parent / "PAUSE").exists(),
         "muted": (ROOT / Path(config.STATE_FILE).parent / "MUTE").exists(),
-        "actions": _actions(),
-        "dice": _dice_request(),
+        "running": _game_running(),
+        "actions": _actions() if _game_running() else [],
+        "dice": _dice_request() if _game_running() else None,
     }
 
 
@@ -181,6 +183,23 @@ def _dice_request():
         return json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
         return None
+
+
+def _game_running():
+    return subprocess.run(["pgrep", "-f", "game.py"],
+                          capture_output=True).returncode == 0
+
+
+def _game_control(action):
+    """Start a fresh game / end the running one, via the axis tmux session."""
+    if action == "stop":
+        subprocess.run(["tmux", "kill-session", "-t", "axis"],
+                       capture_output=True)
+        subprocess.run(["pkill", "-f", "game.py"], capture_output=True)
+    elif action == "start" and not _game_running():
+        subprocess.run(["tmux", "new-session", "-d", "-s", "axis",
+                        "-c", str(ROOT), "./play --new"],
+                       capture_output=True)
 
 
 def _actions():
@@ -193,6 +212,20 @@ def _actions():
 
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
+        if self.path == "/game":  # end the running game / start a fresh one
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                action = json.loads(self.rfile.read(length)).get("action", "")
+            except json.JSONDecodeError:
+                action = ""
+            _game_control(action)
+            body = json.dumps({"running": _game_running()}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if self.path == "/roll":  # die faces typed into the web form
             length = int(self.headers.get("Content-Length", 0))
             try:
