@@ -205,7 +205,8 @@ def validate_moves(state, power, decision, combat_allowed):
         units = {u["type"]: u["count"] for u in mv.get("units", [])}
         desc = ", ".join(f"{n} {u}" for u, n in units.items())
         err = S.check_move(trial, power, units, mv.get("from", ""),
-                           mv.get("to", ""))
+                           mv.get("to", ""),
+                           combat_air_landing=combat_allowed)
         if err is None and not combat_allowed and \
                 S.hostile_powers_in(trial, mv["to"], power):
             err = "noncombat move into a hostile territory"
@@ -241,7 +242,9 @@ def apply_moves(state, table, power, decision, combat_allowed):
     todo, lines = [], []
     for mv in decision.get("moves", []):
         units = {u["type"]: u["count"] for u in mv.get("units", [])}
-        err = S.check_move(state, power, units, mv.get("from", ""), mv.get("to", ""))
+        err = S.check_move(state, power, units, mv.get("from", ""),
+                           mv.get("to", ""),
+                           combat_air_landing=combat_allowed)
         if err is None and not combat_allowed:
             if S.hostile_powers_in(state, mv["to"], power):
                 err = "noncombat move into a hostile territory"

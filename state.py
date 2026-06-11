@@ -107,10 +107,49 @@ def reachable(start, max_moves, allowed):
     return seen
 
 
-def check_move(state, power, units, src, dst):
+def air_movement(state, power, unit):
+    mv = STATS[unit]["movement"]
+    if "long_range_aircraft" in state.get("tech", {}).get(power, []):
+        mv += 2
+    return mv
+
+
+def air_landing_issue(state, power, unit, src, dst):
+    """Classic air rule: an aircraft's combat move must leave enough
+    movement to reach a legal landing spot during noncombat — friendly
+    land, or (fighters) a sea zone holding a friendly carrier. Checked
+    against territory ownership as it stands now; exotic carrier plans
+    are the table referee's call."""
+    mv = air_movement(state, power, unit)
+    fly = lambda t: True
+    d_in = reachable(src, mv, fly).get(dst)
+    if d_in is None:
+        return None  # plain range failure; reported by the caller
+    remaining = mv - d_in
+    side = SIDES[power]
+
+    def can_land(t):
+        if TERR[t]["water"]:
+            return unit == "fighter" and any(
+                SIDES.get(p) == side and u.get("carrier")
+                for p, u in units_in(state, t).items())
+        owner = state["owners"].get(t)
+        return owner is not None and SIDES[owner] == side
+
+    if remaining > 0 and any(can_land(t)
+                             for t in reachable(dst, remaining, fly)):
+        return None
+    return (f"{unit} would reach {dst} with {remaining} movement left and "
+            f"no friendly landing spot in range — aircraft must end the "
+            f"turn landed in friendly territory (fighters may use a "
+            f"friendly carrier). Pick a closer target or skip this strike")
+
+
+def check_move(state, power, units, src, dst, combat_air_landing=False):
     """Best-effort legality check. Returns None if OK, else a reason string.
     Deliberately permissive on the hard parts (amphibious chains, canals,
-    neutrals) — the table referees those."""
+    neutrals) — the table referees those. With combat_air_landing=True,
+    air units must also keep enough movement to land afterward."""
     if src not in TERR or dst not in TERR:
         return f"unknown territory: {src if src not in TERR else dst}"
     have = units_in(state, src, power)
@@ -127,8 +166,13 @@ def check_move(state, power, units, src, dst):
             ok = lambda t: TERR[t]["water"]
         else:  # air
             ok = lambda t: True
+            mv = air_movement(state, power, u)
         if dst not in reachable(src, mv, ok):
             return f"{u} cannot reach {dst} from {src} (move {mv})"
+        if combat_air_landing and u in AIR_UNITS:
+            issue = air_landing_issue(state, power, u, src, dst)
+            if issue:
+                return issue
     return None
 
 

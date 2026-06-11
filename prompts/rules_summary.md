@@ -43,6 +43,14 @@ Germany/Japan are the Axis.
 Combat: each unit rolls a d6; it hits if the roll is ≤ its attack/defense
 number. Casualties are chosen by the owning player (you).
 
+## Aircraft must land (ENFORCED)
+Air units must end the full turn landed in friendly territory. A combat
+move must leave enough movement to fly OUT to a friendly landing spot in
+the noncombat phase: a fighter (4 movement) that spends all 4 reaching its
+target has nowhere to land and the move is ILLEGAL. Fighters may land on
+friendly carriers. Plan every air strike as a round trip — count the
+spaces back to friendly ground before declaring it.
+
 ## Weapons Development (IN PLAY)
 Each research die costs 5 IPCs; a roll of 6 is a breakthrough — a second die
 then determines which technology you receive: 1 jet power (fighters defend
