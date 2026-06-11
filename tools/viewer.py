@@ -27,9 +27,12 @@ MAX_HISTORY = 60         # most recent messages per power sent to the browser
 
 
 def _pretty(content):
-    """Turn a raw JSON decision into table-readable text."""
+    """Turn a raw JSON decision into table-readable text. Some models wrap
+    JSON in markdown fences — peel anything around the outermost braces."""
+    text = str(content)
+    start, end = text.find("{"), text.rfind("}")
     try:
-        d = json.loads(content)
+        d = json.loads(text[start:end + 1] if start >= 0 < end else text)
     except (json.JSONDecodeError, TypeError):
         return content
     if not isinstance(d, dict):
