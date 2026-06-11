@@ -89,7 +89,7 @@ class UI:
         else:
             prompt = (f"Battle in {terr}. You must remove exactly {hits} of "
                       f"these units as casualties: {json.dumps(pool)}.")
-            picked = player.decide(prompt, CASUALTY_SCHEMA)
+            picked = call_ai(player, self.state, prompt, CASUALTY_SCHEMA)
             dump_mind(player)
             self.glog.ai(power, prompt, picked)
         remove = {c["type"]: c["count"] for c in picked["remove"]}
@@ -109,7 +109,7 @@ class UI:
             return player.press_or_retreat(terr)
         prompt = (f"The battle for {terr} continues. Press the attack or "
                   f"retreat? (retreat_to must be a territory you attacked from)")
-        decision = player.decide(prompt, PRESS_SCHEMA)
+        decision = call_ai(player, self.state, prompt, PRESS_SCHEMA)
         dump_mind(player)
         self.glog.ai(power, prompt, decision)
         return decision
@@ -138,11 +138,34 @@ def dump_mind(player):
         {"power": player.power, "history": [clean(m) for m in hist]}, indent=1))
 
 
+def call_ai(player, state, prompt, schema):
+    """Every model call goes through here: a thinking flag for the viewer,
+    and retries with backoff so a provider hiccup doesn't kill game night."""
+    flag = Path(config.STATE_FILE).parent / "thinking.json"
+    flag.parent.mkdir(parents=True, exist_ok=True)
+    flag.write_text(json.dumps({"power": player.power,
+                                "phase": state.get("phase")}))
+    delay = 5
+    try:
+        for attempt in range(4):
+            try:
+                return player.decide(prompt, schema)
+            except Exception as e:
+                if attempt == 3:
+                    raise
+                print(f"  [provider] {player.power} call failed "
+                      f"({str(e)[:100]}); retry in {delay}s")
+                time.sleep(delay)
+                delay *= 3
+    finally:
+        flag.unlink(missing_ok=True)
+
+
 def ai_phase(player, state, prompt, schema, stub_method, glog=None):
     if isinstance(player, StubPlayer):
         decision = stub_method(state)
     else:
-        decision = player.decide(prompt, schema)
+        decision = call_ai(player, state, prompt, schema)
         dump_mind(player)
     if glog:
         glog.ai(player.power, prompt, decision)

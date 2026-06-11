@@ -4,4 +4,7 @@
 #   ./play --new     fresh game
 # Flags pass straight through to game.py (--auto-dice, --max-turns N, ...).
 cd "$(dirname "$0")" || exit 1
-FLEET_API_KEY=$(cat "$HOME/.config/fleet/key") exec python3 game.py "$@"
+mkdir -p logs
+# tee everything to console.log so crashes are never lost with the pane
+FLEET_API_KEY=$(cat "$HOME/.config/fleet/key") python3 game.py "$@" 2>&1 \
+  | tee -a logs/console.log

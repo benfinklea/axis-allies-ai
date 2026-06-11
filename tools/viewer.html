@@ -58,6 +58,11 @@
         top: -11px; right: 10px; background: var(--gold); color: #1a1408;
         font-size: 10px; font-weight: 800; letter-spacing: .06em;
         padding: 2px 8px; border-radius: 8px; }
+  .power.thinking::after { content: "🧠 THINKING…"; animation: pulse 1.4s infinite; }
+  #thinkline { color: var(--gold); font-size: 13px; font-weight: 700; }
+  #thinkline .dots::after { content: ""; animation: dots 1.5s steps(4) infinite; }
+  @keyframes dots { 0% {content:"";} 25% {content:".";} 50% {content:"..";}
+                    75% {content:"...";} }
   .power.eliminated { opacity: .4; filter: grayscale(.8); }
   .power header { display: flex; justify-content: space-between;
                   align-items: center; gap: 8px; }
@@ -185,6 +190,7 @@
   <div id="live"></div>
   <span class="big" id="roundline">⚙️ connecting…</span>
   <span class="dim" id="phaseline"></span>
+  <span id="thinkline"></span>
   <div id="econwrap">
     <div class="lbl"><span>⚔️ Axis economy <b id="axinc">0</b></span>
       <span>🕊️ Allies <b id="alinc">0</b></span></div>
@@ -298,6 +304,9 @@ function render() {
     document.getElementById("dice-input").maxLength = data.dice.n;
   }
   document.getElementById("phaseline").textContent = `phase: ${data.phase}`;
+  document.getElementById("thinkline").innerHTML = data.thinking
+    ? `🧠 ${esc(data.thinking.power.toUpperCase())} is thinking<span class="dots"></span>`
+    : "";
   document.getElementById("axinc").textContent = data.axis_income;
   document.getElementById("alinc").textContent = data.allies_income;
   if (data.econ_threshold) {
@@ -316,6 +325,7 @@ function render() {
   });
   document.getElementById("powers").innerHTML = data.powers.map(p => `
     <div class="power ${p.power === data.turn ? "active" : ""}
+                ${data.thinking && data.thinking.power === p.power ? "thinking" : ""}
                 ${p.eliminated ? "eliminated" : ""}"
          data-power="${p.power}"
          style="--pc:${COLORS[p.power]}" onclick="openDrawer('${p.power}')">

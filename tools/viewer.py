@@ -174,7 +174,16 @@ def payload():
         "running": _game_running(),
         "actions": _actions() if _game_running() else [],
         "dice": _dice_request() if _game_running() else None,
+        "thinking": _thinking() if _game_running() else None,
     }
+
+
+def _thinking():
+    path = ROOT / Path(config.STATE_FILE).parent / "thinking.json"
+    try:
+        return json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
 
 
 def _dice_request():
