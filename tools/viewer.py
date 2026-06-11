@@ -200,6 +200,19 @@ def _game_control(action):
         subprocess.run(["tmux", "new-session", "-d", "-s", "axis",
                         "-c", str(ROOT), "./play --new"],
                        capture_output=True)
+    elif action == "backup":
+        # rewind to the start of the CURRENT turn and replay it: kill the
+        # game, restore the turn-start snapshot, resume
+        _game_control("stop")
+        base = ROOT / Path(config.STATE_FILE).parent
+        ts = base / "turn_start.json"
+        if ts.exists():
+            (ROOT / config.STATE_FILE).write_text(ts.read_text())
+        for f in ("dice_request.json", "dice_response.json",
+                  "actions.json", "PAUSE"):
+            (base / f).unlink(missing_ok=True)
+        subprocess.run(["tmux", "new-session", "-d", "-s", "axis",
+                        "-c", str(ROOT), "./play"], capture_output=True)
 
 
 def _actions():

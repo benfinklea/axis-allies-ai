@@ -147,6 +147,10 @@
              font-size: 14px; font-weight: 800; cursor: pointer;
              background: var(--axis); color: #fff; }
   #gamebtn.stopped { background: #3f7a46; }
+  #backupbtn { background: var(--panel2); color: var(--ink); cursor: pointer;
+               border: 1px solid var(--line); border-radius: 10px;
+               padding: 6px 16px; font-size: 14px; font-weight: 700; }
+  #backupbtn[hidden] { display: none; }
   #todo { display: none; margin: 14px 20px 0; padding: 14px 18px;
           background: linear-gradient(180deg, #2a2410, #1d1a10);
           border: 2px solid var(--gold); border-radius: 12px;
@@ -190,6 +194,7 @@
   <button id="pausebtn" onclick="togglePause()">⏸ Pause</button>
   <button id="mutebtn" onclick="toggleMute()">🔊 Sound on</button>
   <button id="gamebtn" onclick="gameControl()">🛑 End game</button>
+  <button id="backupbtn" onclick="backupTurn()">⏪ Back up one turn</button>
   <span id="status"></span>
 </div>
 <div id="dicebox">
@@ -276,6 +281,7 @@ function render() {
   const gb = document.getElementById("gamebtn");
   gb.textContent = data.running ? "🛑 End game" : "▶️ Start the game";
   gb.classList.toggle("stopped", !data.running);
+  document.getElementById("backupbtn").hidden = !data.running;
   if (!data.running && data.round)
     document.getElementById("roundline").textContent = "🛑 No game running";
   const todo = document.getElementById("todo");
@@ -433,6 +439,16 @@ async function gameControl() {
   await fetch("/game", {method: "POST",
                         body: JSON.stringify({action: running ? "stop" : "start"})});
   setTimeout(tick, 800);
+}
+async function backupTurn() {
+  const who = (data && data.turn || "the current power").toUpperCase();
+  if (!confirm(`Are you sure? This rewinds to the start of ${who}'s turn ` +
+               `and replays it from scratch. Reset their pieces on the ` +
+               `physical board too.`))
+    return;
+  await fetch("/game", {method: "POST",
+                        body: JSON.stringify({action: "backup"})});
+  setTimeout(tick, 1500);
 }
 async function sendRoll(e) {
   e.preventDefault();
