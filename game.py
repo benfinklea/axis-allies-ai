@@ -147,12 +147,16 @@ class UI:
             if isinstance(player, StubPlayer):
                 picked = player.casualties(pool, hits)
             else:
-                prompt = (f"Battle in {terr}. You must remove exactly {hits} "
-                          f"of these units as casualties: {json.dumps(pool)}.")
+                cause = ("Enemy AA fire hit your aircraft"
+                         if aa_fire else "Combat hits")
+                prompt = (f"Battle in {terr}. {cause}: you must remove "
+                          f"exactly {hits} of these units as casualties: "
+                          f"{json.dumps(pool)}.")
                 picked = call_ai(player, self.state, prompt, CASUALTY_SCHEMA)
                 dump_mind(player)
                 self.glog.ai(power, prompt, picked)
-            remove = {c["type"]: c["count"] for c in picked["remove"]}
+            remove = {c.get("type"): c.get("count", 0)
+                      for c in picked.get("remove", [])}
             # hard-validate: exactly `hits` units, all from the pool
             if (sum(remove.values()) != hits
                     or any(pool.get(u, 0) < n for u, n in remove.items())):
@@ -234,7 +238,7 @@ def dump_mind(player):
         return {"role": msg["role"], "content": "\n".join(parts)}
     path = Path(config.STATE_FILE).parent / "minds" / f"{player.power}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(
+    S.atomic_write(path, json.dumps(
         {"power": player.power, "history": [clean(m) for m in hist]}, indent=1))
 
 
@@ -243,8 +247,8 @@ def call_ai(player, state, prompt, schema):
     and retries with backoff so a provider hiccup doesn't kill game night."""
     flag = Path(config.STATE_FILE).parent / "thinking.json"
     flag.parent.mkdir(parents=True, exist_ok=True)
-    flag.write_text(json.dumps({"power": player.power,
-                                "phase": state.get("phase")}))
+    S.atomic_write(flag, json.dumps({"power": player.power,
+                                     "phase": state.get("phase")}))
     delay = 5
     try:
         for attempt in range(4):
@@ -252,7 +256,13 @@ def call_ai(player, state, prompt, schema):
                 return player.decide(prompt, schema)
             except Exception as e:
                 if attempt == 3:
-                    raise
+                    # the show must go on: an empty decision is always safe
+                    # (no moves / no buys / press / referee fallback) and
+                    # beats killing game night
+                    print(f"  [provider] {player.power} failed 4x "
+                          f"({str(e)[:120]}); proceeding with a no-op "
+                          f"decision — table referees")
+                    return {}
                 print(f"  [provider] {player.power} call failed "
                       f"({str(e)[:100]}); retry in {delay}s")
                 time.sleep(delay)
@@ -275,10 +285,9 @@ def ai_phase(player, state, prompt, schema, stub_method, glog=None):
 def post_actions(items):
     """Put physical actions on the viewer's DO THIS panel immediately —
     BEFORE the audio reads them — so the table moves plastic while the
-    voice catches up."""
-    if items:
-        actions = Path(config.STATE_FILE).parent / "actions.json"
-        actions.write_text(json.dumps({"items": items}))
+    voice catches up. An empty list clears the panel."""
+    actions = Path(config.STATE_FILE).parent / "actions.json"
+    S.atomic_write(actions, json.dumps({"items": items}))
 
 
 def await_done(table, items):
@@ -324,6 +333,9 @@ def validate_moves(state, power, decision, combat_allowed):
         units = {(S.canon_unit(u["type"]) or u["type"]): u["count"]
                  for u in mv.get("units", [])}
         desc = ", ".join(f"{n} {u}" for u, n in units.items())
+        if any(not isinstance(n, int) or n < 1 for n in units.values()):
+            errs.append(f"- {desc}: unit counts must be positive integers")
+            continue
         err = S.check_move(trial, power, units, mv.get("from", ""),
                            mv.get("to", ""),
                            combat_air_landing=combat_allowed)
@@ -367,6 +379,9 @@ def apply_moves(state, table, power, decision, combat_allowed):
     for mv in decision.get("moves", []):
         units = {(S.canon_unit(u["type"]) or u["type"]): u["count"]
                  for u in mv.get("units", [])}
+        if any(not isinstance(n, int) or n < 1 for n in units.values()):
+            table.note("Illegal move bounced (non-positive unit count).")
+            continue
         err = S.check_move(state, power, units, mv.get("from", ""),
                            mv.get("to", ""),
                            combat_air_landing=combat_allowed)
@@ -392,6 +407,14 @@ def apply_moves(state, table, power, decision, combat_allowed):
                       if defenders else "")
         if amphib:
             attack_tag += " — AMPHIBIOUS: load onto transport, sail, unload"
+        if (combat_allowed and not S.TERR[mv["to"]]["water"]
+                and S.is_neutral(state, mv["to"])
+                and any(u in S.LAND_UNITS for u in units)):
+            fee = min(3, state["ipcs"][power])
+            state["ipcs"][power] -= fee
+            state["owners"][mv["to"]] = power
+            lines.append(f"{power} violates {mv['to']}'s neutrality — pays "
+                         f"{fee} IPCs to the bank and claims the territory.")
         if combat_allowed and defenders and not amphib:
             # remember where this attack came from: retreats may only fall
             # back to one of these origins (landed troops never retreat)
@@ -447,6 +470,7 @@ def run_turn(state, players, table, power, glog):
     # replays from HERE, not from a half-mutated checkpoint
     S.save(state, Path(config.STATE_FILE).parent / "turn_start.json")
     table.turn_buffer = []
+    post_actions([])  # clear any stale DO THIS list from the last turn
     board = S.summary_for_ai(state) + council.brief(state, power)
     checkpoint()
     table.speak(f"{power.upper()}'s turn. Treasury: {state['ipcs'][power]} IPCs.")
@@ -483,6 +507,9 @@ def run_turn(state, players, table, power, glog):
                 p["unit"] = cu
             else:
                 problems.append(f"unknown unit type '{p.get('unit')}'")
+            if not isinstance(p.get("quantity"), int) or p["quantity"] < 1:
+                problems.append(f"quantity for {p.get('unit')} must be a "
+                                f"positive integer")
         cost = sum(S.STATS[p["unit"]]["cost"] * p["quantity"]
                    for p in d.get("purchases", []) if p["unit"] in S.STATS)
         research = (max(0, int(d.get("research_dice", 0)))
@@ -623,6 +650,20 @@ def run_turn(state, players, table, power, glog):
                 bucket = bounced
             slot = bucket.setdefault(str(terr), {})
             slot[str(unit)] = slot.get(str(unit), 0) + 1
+        # nothing bought may be silently stranded: auto-place leftovers at
+        # the first legal spot (factories for land/air, adjacent friendly
+        # sea for ships) and say so — IPCs were spent
+        for unit in [u for u, n in list(pend.items()) if n > 0]:
+            spots = ([z for f in factories for z in S.TERR[f]["adjacent"]
+                      if placeable(unit, z)] if unit in S.SEA_UNITS
+                     else [t for t in factories if placeable(unit, t)])
+            while pend.get(unit, 0) > 0 and spots:
+                S.add_units(state, spots[0], power, {unit: 1})
+                pend[unit] -= 1
+                slot = placed.setdefault(spots[0], {})
+                slot[unit] = slot.get(unit, 0) + 1
+                table.note(f"{power} auto-places a {unit} in {spots[0]} "
+                           f"(the AI left it unplaced).")
         todo = [f"Place {', '.join(f'{n} {u}' for u, n in sorted(units.items()))} "
                 f"in {terr}" for terr, units in placed.items()]
         post_actions(todo)
@@ -746,10 +787,12 @@ def main():
                     pl.history.append({"role": "user", "content": report})
                     dump_mind(pl)
             # advance the pointer so a resume starts with the NEXT power
-            # instead of replaying the turn that just finished
+            # instead of replaying the turn that just finished (wrapping to
+            # the round's first power so the LAST turn never replays either)
             nxt = order.index(power) + 1
-            if nxt < len(order):
-                state["turn"] = order[nxt]
+            state["turn"] = order[nxt] if nxt < len(order) else order[0]
+            (Path(config.STATE_FILE).parent
+             / "turn_start.json").unlink(missing_ok=True)
             S.save(state, config.STATE_FILE)
             snap = Path(config.SNAPSHOT_DIR) / f"r{state['round']}_{power}.json"
             S.save(state, snap)

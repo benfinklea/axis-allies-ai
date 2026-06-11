@@ -6,6 +6,8 @@ is attached, works too — first answer wins.
 """
 import json
 import random
+
+from state import atomic_write as _aw
 import select
 import sys
 import time
@@ -29,7 +31,7 @@ def _table_roll(n, label, log):
     resp.unlink(missing_ok=True)
     error = ""
     while True:
-        req.write_text(json.dumps({"n": n, "label": label, "error": error}))
+        _aw(req, json.dumps({"n": n, "label": label, "error": error}))
         if sys.stdin.isatty():
             print(f"  ROLL {n} dice — {label} (here or on the web) > ",
                   end="", flush=True)
@@ -90,7 +92,7 @@ def battle(groups, context, mode="manual", speak=None, log=None):
               f"screen.")
     error = ""
     while True:
-        req.write_text(json.dumps(
+        _aw(req, json.dumps(
             {"battle": dict(context, groups=groups, error=error)}))
         while not resp.exists():
             time.sleep(0.5)

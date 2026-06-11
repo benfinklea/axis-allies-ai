@@ -47,10 +47,16 @@ class OpenAICompatPlayer(Player):
         self._trim_history()
         try:
             resp = self._request(self.history, schema)
-        except Exception:
-            if not self.supports_schema:
+        except Exception as e:
+            # only degrade to prompt-enforced JSON when the server actually
+            # rejected response_format; real network/auth/5xx errors must
+            # surface so the retry layer above handles them
+            rejected_schema = ("response_format" in str(e)
+                               or "json_schema" in str(e)
+                               or getattr(e, "status_code", None) == 400)
+            if not self.supports_schema or not rejected_schema:
                 raise
-            self.supports_schema = False  # server rejected response_format
+            self.supports_schema = False
             resp = self._request(self.history, schema)
         text = resp.choices[0].message.content
         self.history.append({"role": "assistant", "content": text})

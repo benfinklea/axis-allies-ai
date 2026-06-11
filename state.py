@@ -37,12 +37,18 @@ def load(path):
     return json.loads(Path(path).read_text())
 
 
-def save(state, path):
+def atomic_write(path, text):
+    """The viewer and the game trade flag files; partial reads are real.
+    Always write-then-rename."""
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    tmp = p.with_suffix(".tmp")  # atomic: the live viewer reads this file
-    tmp.write_text(json.dumps(state, indent=1, sort_keys=True))
+    tmp = p.with_suffix(p.suffix + ".tmp")
+    tmp.write_text(text)
     os.replace(tmp, p)
+
+
+def save(state, path):
+    atomic_write(path, json.dumps(state, indent=1, sort_keys=True))
 
 
 def units_in(state, terr, power=None):
@@ -90,24 +96,48 @@ def hostile_powers_in(state, terr, power):
     return [p for p in units_in(state, terr) if is_enemy(power, p)]
 
 
-def reachable(start, max_moves, allowed, transit=None):
+def reachable(start, max_moves, allowed, transit=None, edge_ok=None):
     """Territories within max_moves steps of start, where allowed(t) gates
-    every territory entered, and transit(t) additionally gates passing
-    THROUGH t (enter-and-stop is always fine — that's an attack). Returns
-    {territory: distance}."""
+    every territory entered, transit(t) additionally gates passing THROUGH
+    t (enter-and-stop is always fine — that's an attack), and edge_ok(a, b)
+    gates specific crossings (canals). Returns {territory: distance}."""
     seen = {start: 0}
     frontier = [start]
     for dist in range(1, max_moves + 1):
         nxt = []
         for t in frontier:
             for adj in TERR[t]["adjacent"]:
-                if adj not in seen and allowed(adj):
+                if adj not in seen and allowed(adj) and \
+                        (edge_ok is None or edge_ok(t, adj)):
                     seen[adj] = dist
                     if transit is None or transit(adj):
                         nxt.append(adj)
         frontier = nxt
     seen.pop(start, None)
     return seen
+
+
+def is_neutral(state, t):
+    return not TERR[t]["water"] and state["owners"].get(t) is None
+
+
+CANALS = [
+    {"zones": ("West Panama Sea Zone", "Carribean Sea Zone"),
+     "control": ("Panama",), "name": "the Panama Canal"},
+    {"zones": ("Red Sea Zone", "East Mediteranean Sea Zone"),
+     "control": ("Anglo Sudan Egypt", "Syria Jordan"), "name": "the Suez Canal"},
+]
+
+
+def canal_blocked(state, power, a, b):
+    """Canal crossings need friendly control of the canal territories."""
+    for c in CANALS:
+        if {a, b} == set(c["zones"]):
+            side = SIDES[power]
+            owners = (state["owners"].get(t) for t in c["control"])
+            if not all(o is not None and SIDES[o] == side for o in owners):
+                return c["name"]
+    return None
 
 
 def air_movement(state, power, unit):
@@ -313,11 +343,14 @@ def check_move(state, power, units, src, dst, combat_air_landing=False):
     clear = lambda t: not hostile_powers_in(state, t, power)
     for u, n in units.items():
         mv = STATS[u]["movement"]
-        transit = clear
+        transit, edge = clear, None
         if u in LAND_UNITS:
             ok = lambda t: not TERR[t]["water"]
+            # no passing through neutrals (tanks can't blitz them either)
+            transit = lambda t: clear(t) and not is_neutral(state, t)
         elif u in SEA_UNITS:
             ok = lambda t: TERR[t]["water"]
+            edge = lambda a, b: not canal_blocked(state, power, a, b)
         else:  # air
             ok = lambda t: True
             transit = None
@@ -325,7 +358,12 @@ def check_move(state, power, units, src, dst, combat_air_landing=False):
         if combat_air_landing and u == "aaGun" \
                 and hostile_powers_in(state, dst, power):
             return "AA guns can never attack or enter enemy-held spaces"
-        if dst not in reachable(src, mv, ok, transit):
+        if u in SEA_UNITS and dst not in reachable(src, mv, ok, transit, edge):
+            if dst in reachable(src, mv, ok, transit):
+                blocker = canal_blocked(state, power, src, dst) or "a canal"
+                return (f"{u} cannot pass {blocker}: your side must control "
+                        f"the canal territories")
+        if dst not in reachable(src, mv, ok, transit, edge):
             if u in LAND_UNITS and amphibious_ok(state, power, src, dst):
                 continue  # ferried by transport; table handles the legs
             blocked = (mv > 1 and transit is not None

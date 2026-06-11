@@ -136,9 +136,14 @@ def _photo_report():
     return None
 
 
+_battle_cache = {"key": None, "battles": []}
+
+
 def _battles():
     """Battle summaries parsed from the current game's corpus log — one
-    card per battle so the table can verify the board afterward."""
+    card per battle so the table can verify the board afterward. Cached by
+    (path, size): the log only grows, and re-parsing megabytes every 2s
+    poll would thrash CPU late-game."""
     state_path = ROOT / config.STATE_FILE
     try:
         game_id = json.loads(state_path.read_text()).get("game_id")
@@ -147,6 +152,9 @@ def _battles():
     log = ROOT / Path(config.STATE_FILE).parent / "games" / f"{game_id}.jsonl"
     if not log.exists():
         return []
+    key = (str(log), log.stat().st_size)
+    if _battle_cache["key"] == key:
+        return _battle_cache["battles"]
     battles, current = [], None
     keep = ("combat round", "loses", "Surprise strike", "AA fire",
             "withdraw", "Press done")
@@ -173,7 +181,9 @@ def _battles():
             elif "loses" in text or "Surprise strike" in text \
                     or "AA fire" in text or "withdraw" in text:
                 current["events"].append(text)
-    return battles[-25:]
+    _battle_cache["key"] = key
+    _battle_cache["battles"] = battles[-25:]
+    return _battle_cache["battles"]
 
 
 def _transcript_tail(n=80):
@@ -335,7 +345,7 @@ class Handler(BaseHTTPRequestHandler):
             except json.JSONDecodeError:
                 body = {}
             path = ROOT / Path(config.STATE_FILE).parent / "dice_response.json"
-            path.write_text(json.dumps(
+            S.atomic_write(path, json.dumps(
                 {"raw": str(body.get("raw", "")),
                  "rolls": body.get("rolls", {})}))
             body = b'{"ok": true}'
@@ -347,7 +357,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self.path == "/done":  # the table finished the DO THIS list
             path = ROOT / Path(config.STATE_FILE).parent / "actions.json"
-            path.write_text(json.dumps({"items": []}))
+            S.atomic_write(path, json.dumps({"items": []}))
             body = b'{"ok": true}'
             self.send_response(200)
             self.send_header("Content-Type", "application/json")

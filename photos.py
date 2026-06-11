@@ -143,9 +143,11 @@ def _norm(s):
 
 def _match_territory(name):
     """Map the model's territory string to a board name ('Karelia' ->
-    'Karelia S.S.R.'). None if nothing plausible matches."""
+    'Karelia S.S.R.'). None if nothing plausible matches. Substring
+    matching requires a unique hit AND a meaningful overlap, so a vague
+    'Africa' can never bind to an arbitrary territory."""
     n = _norm(name)
-    if not n:
+    if not n or len(n) < 4:
         return None
     by_norm = {_norm(t): t for t in S.TERR}
     if n in by_norm:
@@ -272,6 +274,8 @@ def main():
                     slot[u["type"]] = {"count": u.get("count", 0),
                                        "countable": bool(u.get("countable"))}
     def in_adjacent_sea(terr, power, utype):
+        if terr not in S.TERR:
+            return False
         for adj in S.TERR[terr]["adjacent"]:
             if S.TERR[adj]["water"] and \
                     engine.get(adj, {}).get(power, {}).get(utype):
