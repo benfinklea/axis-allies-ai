@@ -155,6 +155,21 @@
              border-radius: 10px; padding: 9px 26px; font-size: 15px;
              font-weight: 800; cursor: pointer; }
   #donebtn:hover { filter: brightness(1.1); }
+  #dicebox { display: none; margin: 14px 20px 0; padding: 16px 18px;
+             background: linear-gradient(180deg, #2a1212, #1d1010);
+             border: 2px solid var(--axis); border-radius: 12px;
+             box-shadow: 0 0 24px rgba(208,92,82,.3); }
+  #dicebox.show { display: block; }
+  #dicebox h2 { color: var(--axis); font-size: 14px; }
+  #dice-label { font-size: 17px; font-weight: 700; margin: 6px 0 12px; }
+  #dice-input { background: #0c0e12; color: var(--ink); font-size: 22px;
+                letter-spacing: .3em; width: 180px; padding: 8px 12px;
+                border: 1px solid var(--line); border-radius: 10px;
+                font-family: ui-monospace, Menlo, monospace; }
+  #dice-submit { background: var(--axis); color: #fff; border: none;
+                 border-radius: 10px; padding: 11px 24px; font-size: 15px;
+                 font-weight: 800; cursor: pointer; margin-left: 10px; }
+  #dice-error { color: var(--gold); font-size: 13px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -171,6 +186,16 @@
   <button id="pausebtn" onclick="togglePause()">⏸ Pause</button>
   <button id="mutebtn" onclick="toggleMute()">🔊 Sound on</button>
   <span id="status"></span>
+</div>
+<div id="dicebox">
+  <h2>🎲 ROLL THE DICE</h2>
+  <div id="dice-label"></div>
+  <form onsubmit="return sendRoll(event)">
+    <input id="dice-input" inputmode="numeric" autocomplete="off"
+           placeholder="e.g. 531">
+    <button id="dice-submit">Submit roll</button>
+  </form>
+  <div id="dice-error"></div>
 </div>
 <div id="todo">
   <h2>🫵 DO THIS — the table's move</h2>
@@ -247,6 +272,15 @@ function render() {
   todo.classList.toggle("show", (data.actions || []).length > 0);
   document.getElementById("todo-items").innerHTML =
     (data.actions || []).map(a => `<li>${esc(a)}</li>`).join("");
+  // dice form: update labels only — never re-render the input mid-typing
+  const dice = document.getElementById("dicebox");
+  dice.classList.toggle("show", !!data.dice);
+  if (data.dice) {
+    document.getElementById("dice-label").textContent =
+      `Roll ${data.dice.n} ${data.dice.n === 1 ? "die" : "dice"} — ${data.dice.label}`;
+    document.getElementById("dice-error").textContent = data.dice.error || "";
+    document.getElementById("dice-input").maxLength = data.dice.n;
+  }
   document.getElementById("phaseline").textContent = `phase: ${data.phase}`;
   document.getElementById("axinc").textContent = data.axis_income;
   document.getElementById("alinc").textContent = data.allies_income;
@@ -381,6 +415,17 @@ async function markDone() {
 async function toggleMute() {
   await fetch("/mute", {method: "POST"});
   tick();
+}
+async function sendRoll(e) {
+  e.preventDefault();
+  const input = document.getElementById("dice-input");
+  const raw = input.value.trim();
+  if (raw) {
+    await fetch("/roll", {method: "POST", body: JSON.stringify({raw})});
+    input.value = "";
+    setTimeout(tick, 700);  // give the game a beat to consume it
+  }
+  return false;
 }
 
 async function tick() {

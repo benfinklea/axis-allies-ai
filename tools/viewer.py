@@ -171,7 +171,16 @@ def payload():
         "paused": (ROOT / Path(config.STATE_FILE).parent / "PAUSE").exists(),
         "muted": (ROOT / Path(config.STATE_FILE).parent / "MUTE").exists(),
         "actions": _actions(),
+        "dice": _dice_request(),
     }
+
+
+def _dice_request():
+    path = ROOT / Path(config.STATE_FILE).parent / "dice_request.json"
+    try:
+        return json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
 
 
 def _actions():
@@ -184,6 +193,21 @@ def _actions():
 
 class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
+        if self.path == "/roll":  # die faces typed into the web form
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                raw = json.loads(self.rfile.read(length)).get("raw", "")
+            except json.JSONDecodeError:
+                raw = ""
+            path = ROOT / Path(config.STATE_FILE).parent / "dice_response.json"
+            path.write_text(json.dumps({"raw": str(raw)}))
+            body = b'{"ok": true}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
         if self.path == "/done":  # the table finished the DO THIS list
             path = ROOT / Path(config.STATE_FILE).parent / "actions.json"
             path.write_text(json.dumps({"items": []}))

@@ -442,6 +442,8 @@ def main():
             state = ts  # interrupted mid-turn: replay from the clean start
     if "game_id" not in state:
         state["game_id"] = time.strftime("%Y%m%d-%H%M%S")
+    for stale in ("dice_request.json", "dice_response.json"):
+        (Path(config.STATE_FILE).parent / stale).unlink(missing_ok=True)
     players = build_players(all_stub="--stub" in sys.argv)
     if fresh:  # a new game gets clean table surfaces; the old game's
         # transcript/minds/actions live on in its corpus JSONL
