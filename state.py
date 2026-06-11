@@ -148,6 +148,70 @@ def air_landing_issue(state, power, unit, src, dst):
             f"friendly carrier). Pick a closer target or skip this strike")
 
 
+def air_spent_pool(state, src, power, unit):
+    """Remaining-movement entries for `unit` aircraft sitting in src that
+    flew a combat move this turn. Casualties are unidentified, so be lenient:
+    if fewer aircraft remain than entries, assume the survivors are the ones
+    with the MOST movement left (keep the largest entries)."""
+    spent = (state.get("air_spent", {}).get(src, {})
+             .get(power, {}).get(unit) or [])
+    total_here = units_in(state, src, power).get(unit, 0)
+    if len(spent) > total_here:
+        spent = sorted(spent, reverse=True)[:total_here]
+    return spent
+
+
+def note_air_moves(state, power, units, src, dst, combat):
+    """Bookkeeping after an applied move. Combat phase: record each air
+    unit's REMAINING movement at its destination — leaving home counts as
+    the first move, sea zone or not, and what was spent flying to the fight
+    constrains where it may land. Noncombat phase: consume entries as the
+    aircraft fly off to land (smallest sufficient entry first; movers beyond
+    the recorded list are fresh full-movement aircraft)."""
+    fly = lambda t: True
+    for u, n in units.items():
+        if u not in AIR_UNITS or not n:
+            continue
+        mv = air_movement(state, power, u)
+        d = reachable(src, mv, fly).get(dst)
+        if d is None:
+            continue
+        if combat:
+            pool = (state.setdefault("air_spent", {}).setdefault(dst, {})
+                    .setdefault(power, {}).setdefault(u, []))
+            pool += [mv - d] * n
+        else:
+            pool = air_spent_pool(state, src, power, u)
+            usable = sorted([r for r in pool if r >= d])
+            keep = list(pool)
+            for r in usable[:n]:
+                keep.remove(r)
+            src_map = state.get("air_spent", {}).get(src, {}).get(power, {})
+            if u in src_map:
+                if keep:
+                    src_map[u] = keep
+                else:
+                    del src_map[u]
+
+
+def air_spent_brief(state, power):
+    """One-line-per-group reminder for the noncombat prompt: aircraft that
+    flew combat this turn and how much movement each has left to land."""
+    lines = []
+    for terr, by_power in sorted(state.get("air_spent", {}).items()):
+        for u in sorted(by_power.get(power, {})):
+            pool = air_spent_pool(state, terr, power, u)
+            if pool:
+                lines.append(f"- {terr}: {len(pool)} {u} with "
+                             f"{', '.join(str(r) for r in sorted(pool))} "
+                             f"movement left to land")
+    if not lines:
+        return ""
+    return ("\nAIRCRAFT THAT FLEW COMBAT THIS TURN (movement already spent "
+            "counts — they must land within what remains):\n"
+            + "\n".join(lines))
+
+
 def check_move(state, power, units, src, dst, combat_air_landing=False):
     """Best-effort legality check. Returns None if OK, else a reason string.
     Deliberately permissive on the hard parts (amphibious chains, canals,
@@ -188,6 +252,21 @@ def check_move(state, power, units, src, dst, combat_air_landing=False):
             issue = air_landing_issue(state, power, u, src, dst)
             if issue:
                 return issue
+        if not combat_air_landing and u in AIR_UNITS:
+            # Landing flight: movement spent on the combat flight counts.
+            # A fighter that flew 3 to the fight has only 1 left — Gibraltar,
+            # not the long way home.
+            spent = air_spent_pool(state, src, power, u)
+            if spent:
+                d = reachable(src, mv, ok).get(dst, mv)
+                fresh = max(0, units_in(state, src, power).get(u, 0) - len(spent))
+                capacity = sum(1 for r in spent if r >= d) + fresh
+                if n > capacity:
+                    return (f"only {capacity} {u} in {src} can fly {d} to "
+                            f"{dst}: combat movement already spent — "
+                            f"remaining movement is "
+                            f"{', '.join(str(r) for r in sorted(spent))}. "
+                            f"Land the rest within their remaining range")
     return None
 
 

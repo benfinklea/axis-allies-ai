@@ -315,6 +315,8 @@ def validate_moves(state, power, decision, combat_allowed):
             errs.append(f"- {desc} {mv.get('from')} -> {mv.get('to')}: {err}")
         else:
             S.apply_move(trial, power, units, mv["from"], mv["to"])
+            S.note_air_moves(trial, power, units, mv["from"], mv["to"],
+                             combat=combat_allowed)
     return errs
 
 
@@ -355,6 +357,8 @@ def apply_moves(state, table, power, decision, combat_allowed):
             continue
         defenders = S.hostile_powers_in(state, mv["to"], power)
         S.apply_move(state, power, units, mv["from"], mv["to"])
+        S.note_air_moves(state, power, units, mv["from"], mv["to"],
+                         combat=combat_allowed)
         desc = ", ".join(f"{n} {u}" for u, n in units.items())
         attack_tag = (f" — ATTACKING {' and '.join(defenders)} there"
                       if defenders else "")
@@ -464,6 +468,7 @@ def run_turn(state, players, table, power, glog):
     # 2-3. Combat movement + combat
     state["phase"] = "combat_move"
     state["attack_origins"] = {}  # fresh each turn; retreats consult this
+    state["air_spent"] = {}  # fresh each turn; landing legality consults this
     checkpoint()
     board = S.summary_for_ai(state)
     d = decide_moves(player, state, power, table, glog,
@@ -499,6 +504,7 @@ def run_turn(state, players, table, power, glog):
                      f"freely; no moves into hostile territory. Plan "
                      f"carefully: your full plan is validated before "
                      f"anything is announced at the table."
+                     + S.air_spent_brief(state, power)
                      + phase_rules("noncombat", state, power),
                      getattr(player, "noncombat_moves", None),
                      combat_allowed=False)
