@@ -133,6 +133,25 @@ def resolve_battle(state, terr, attacker, ui):
                 lost = ui.ask_casualties(attacker, pool, take, terr)
                 S.remove_units(state, terr, attacker, lost)
 
+        # Classic special: surviving DEFENDING submarines may withdraw to an
+        # adjacent friendly/unoccupied sea zone after the exchange. (A full
+        # attacking-force retreat is the press question below; partial
+        # attacker sub-withdrawal stays a referee call.)
+        if S.units_in(state, terr, attacker):
+            for p in list(S.hostile_powers_in(state, terr, attacker)):
+                n_subs = S.units_in(state, terr, p).get("submarine", 0)
+                dests = [z for z in S.TERR[terr]["adjacent"]
+                         if S.TERR[z]["water"]
+                         and not S.hostile_powers_in(state, z, p)]
+                if not n_subs or not dests:
+                    continue
+                choice = ui.ask_sub_withdraw(p, terr, n_subs, dests)
+                dest = choice.get("retreat_to")
+                if choice.get("action") == "retreat" and dest in dests:
+                    S.apply_move(state, p, {"submarine": n_subs}, terr, dest)
+                    ui.speak(f"{p}'s submarines withdraw from {terr} "
+                             f"to {dest}.")
+
         defenders = S.hostile_powers_in(state, terr, attacker)
         if defenders and S.units_in(state, terr, attacker):
             choice = ui.ask_press(attacker, terr)

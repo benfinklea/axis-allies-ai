@@ -57,6 +57,11 @@ stay and fight there. A 2-move ship or tank cannot pass through a zone or
 territory holding enemy units on its way somewhere else. Only aircraft
 fly over the enemy.
 
+## Submarine withdrawal (ENFORCED)
+After each combat round, surviving submarines may withdraw: defending subs
+to ONE adjacent friendly or unoccupied sea zone (you will be asked). An
+attacking force retreats as a whole via the press/retreat decision.
+
 ## Weapons Development (IN PLAY)
 Each research die costs 5 IPCs; a roll of 6 is a breakthrough — a second die
 then determines which technology you receive: 1 jet power (fighters defend

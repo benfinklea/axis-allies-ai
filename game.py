@@ -112,6 +112,26 @@ class UI:
         self.speak(f"{power} loses " + ", ".join(f"{n} {u}" for u, n in remove.items()))
         return remove
 
+    def ask_sub_withdraw(self, power, terr, n_subs, dests):
+        """Classic special: defending submarines may withdraw after a round
+        of fire, to an adjacent friendly or unoccupied sea zone."""
+        player = self.players[power]
+        if isinstance(player, StubPlayer):
+            return {"action": "press"}
+        attackers = {p: S.units_in(self.state, terr, p)
+                     for p in S.hostile_powers_in(self.state, terr, power)}
+        prompt = (f"Your {n_subs} submarine(s) in {terr} survived this "
+                  f"combat round. Attackers still present: "
+                  f"{json.dumps(attackers)}. Classic rule: defending "
+                  f"submarines may withdraw to ONE adjacent friendly or "
+                  f"unoccupied sea zone. Legal destinations: {dests}. "
+                  f"action 'retreat' (with retreat_to) withdraws the subs; "
+                  f"'press' keeps them fighting.")
+        decision = call_ai(player, self.state, prompt, PRESS_SCHEMA)
+        dump_mind(player)
+        self.glog.ai(power, prompt, decision)
+        return decision
+
     def ask_press(self, power, terr):
         player = self.players[power]
         if isinstance(player, StubPlayer):
