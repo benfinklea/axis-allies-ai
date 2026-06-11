@@ -134,6 +134,11 @@
               max-height: 130px; overflow-y: auto; }
   .msg.assistant { background: #2a3850; align-self: flex-end; }
   #status { color: var(--dim); font-size: 12px; }
+  #pausebtn { background: var(--panel2); color: var(--ink); cursor: pointer;
+              border: 1px solid var(--line); border-radius: 10px;
+              padding: 6px 16px; font-size: 14px; font-weight: 700; }
+  #pausebtn.paused { background: var(--gold); color: #1a1408;
+                     box-shadow: 0 0 14px rgba(232,195,90,.4); }
 </style>
 </head>
 <body>
@@ -147,6 +152,7 @@
     <div id="econbar" title="Axis economic-victory progress">
       <div id="econfill"></div></div>
   </div>
+  <button id="pausebtn" onclick="togglePause()">⏸ Pause</button>
   <span id="status"></span>
 </div>
 <main>
@@ -206,8 +212,12 @@ const uicon = t => UICON[t] || "▪️";
 function render() {
   if (!data || data.error || !data.powers) return;
   document.getElementById("roundline").textContent =
-    data.round ? `Round ${data.round} — ${data.turn.toUpperCase()} to play`
-               : "🎬 Game starting…";
+    data.paused ? "⏸ PAUSED — the war waits"
+    : data.round ? `Round ${data.round} — ${data.turn.toUpperCase()} to play`
+                 : "🎬 Game starting…";
+  const pb = document.getElementById("pausebtn");
+  pb.textContent = data.paused ? "▶ Resume" : "⏸ Pause";
+  pb.classList.toggle("paused", data.paused);
   document.getElementById("phaseline").textContent = `phase: ${data.phase}`;
   document.getElementById("axinc").textContent = data.axis_income;
   document.getElementById("alinc").textContent = data.allies_income;
@@ -319,6 +329,10 @@ document.getElementById("filters").addEventListener("click", e => {
   render();
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+async function togglePause() {
+  await fetch("/pause", {method: "POST"});
+  tick();
+}
 
 async function tick() {
   try {

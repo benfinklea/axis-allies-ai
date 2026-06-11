@@ -175,9 +175,19 @@ def run_turn(state, players, table, power, glog):
     player = players[power]
     ui = UI(table, players, state, glog)
 
-    def checkpoint():  # keep the live viewer fresh between phases
+    def checkpoint():
+        # keep the live viewer fresh between phases, and honor the pause
+        # flag (logs/PAUSE — toggled by the viewer's pause button)
         S.save(state, config.STATE_FILE)
+        pause = Path(config.STATE_FILE).parent / "PAUSE"
+        if pause.exists():
+            table.speak("Game paused.")
+            while pause.exists():
+                time.sleep(1)
+            table.speak("The war resumes.")
+
     board = S.summary_for_ai(state) + council.brief(state, power)
+    checkpoint()
     table.speak(f"{power.upper()}'s turn. Treasury: {state['ipcs'][power]} IPCs.")
 
     # 0. State of the war — spoken before any decisions
@@ -210,6 +220,15 @@ def run_turn(state, players, table, power, glog):
         table.speak(f"{power} overspent ({cost} > {state['ipcs'][power]}); purchase voided.")
     else:
         state["ipcs"][power] -= cost
+        bought = ", ".join(f"{p['quantity']} {p['unit']}"
+                           for p in d.get("purchases", [])
+                           if p["unit"] in S.STATS and p["quantity"])
+        line = f"{power} buys {bought}" if bought else f"{power} buys nothing"
+        if research:
+            line += f" and {research} research dice" if bought else \
+                    f" but {research} research dice"
+        table.speak(f"{line} — {cost} IPCs spent, "
+                    f"{state['ipcs'][power]} left.")
         pend = state["purchased_pending"].setdefault(power, {})
         for p in d.get("purchases", []):
             if p["unit"] in S.STATS:

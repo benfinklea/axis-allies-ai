@@ -160,10 +160,29 @@ def payload():
                            if config.ECONOMIC_VICTORY else None),
         "transcript": _transcript_tail(),
         "photo_report": _photo_report(),
+        "paused": (ROOT / Path(config.STATE_FILE).parent / "PAUSE").exists(),
     }
 
 
 class Handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        if self.path == "/pause":  # toggle the pause flag the game honors
+            flag = ROOT / Path(config.STATE_FILE).parent / "PAUSE"
+            if flag.exists():
+                flag.unlink()
+            else:
+                flag.parent.mkdir(parents=True, exist_ok=True)
+                flag.write_text("paused via viewer\n")
+            body = json.dumps({"paused": flag.exists()}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        self.send_response(404)
+        self.end_headers()
+
     def do_GET(self):
         if self.path.split("?")[0] == "/data":
             try:
