@@ -250,6 +250,30 @@ def air_spent_brief(state, power):
             + "\n".join(lines))
 
 
+def amphibious_ok(state, power, src, dst):
+    """Permissive ferry check for land units crossing water: both ends are
+    land with coasts, a sea route of <=2 zones links them, and a friendly
+    transport is on or near that route. Loading, capacity, and the exact
+    legs are the table referee's domain — the engine just refuses fantasy
+    crossings with no transport anywhere nearby."""
+    if TERR[src]["water"] or TERR[dst]["water"]:
+        return False
+    water = lambda t: TERR[t]["water"]
+    src_zones = [z for z in TERR[src]["adjacent"] if water(z)]
+    dst_zones = set(z for z in TERR[dst]["adjacent"] if water(z))
+    if not src_zones or not dst_zones:
+        return False
+    has_transport = lambda z: units_in(state, z, power).get("transport")
+    for z in src_zones:
+        route = {z: 0}
+        route.update(reachable(z, 2, water))
+        if dst_zones & set(route):
+            if any(has_transport(t) for t in route) or \
+                    any(has_transport(t) for t in dst_zones):
+                return True
+    return False
+
+
 def check_move(state, power, units, src, dst, combat_air_landing=False):
     """Best-effort legality check. Returns None if OK, else a reason string.
     Deliberately permissive on the hard parts (amphibious chains, canals,
@@ -279,13 +303,20 @@ def check_move(state, power, units, src, dst, combat_air_landing=False):
             ok = lambda t: True
             transit = None
             mv = air_movement(state, power, u)
+        if combat_air_landing and u == "aaGun" \
+                and hostile_powers_in(state, dst, power):
+            return "AA guns can never attack or enter enemy-held spaces"
         if dst not in reachable(src, mv, ok, transit):
+            if u in LAND_UNITS and amphibious_ok(state, power, src, dst):
+                continue  # ferried by transport; table handles the legs
             blocked = (mv > 1 and transit is not None
                        and dst in reachable(src, mv, ok))
             return (f"{u} cannot reach {dst} from {src}: the path passes "
                     f"through an enemy-occupied space — units must stop "
                     f"and fight where they meet the enemy" if blocked else
-                    f"{u} cannot reach {dst} from {src} (move {mv})")
+                    f"{u} cannot reach {dst} from {src} (move {mv}). If "
+                    f"this was meant as an amphibious move, you need a "
+                    f"transport positioned on the sea route")
         if combat_air_landing and u in AIR_UNITS:
             issue = air_landing_issue(state, power, u, src, dst)
             if issue:

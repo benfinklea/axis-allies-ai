@@ -382,6 +382,9 @@ def apply_moves(state, table, power, decision, combat_allowed):
                      f"{mv['to']}{attack_tag}.")
         todo.append(f"From {mv['from']}: move {desc} to {mv['to']}"
                     f"{attack_tag}")
+    if todo and decision.get("reasoning") and any(
+            "transport" in t or "AMPHIBIOUS" in t for t in todo):
+        todo.append(f"📝 {power}'s stated plan: {decision['reasoning']}")
     post_actions(todo)        # panel first: move plastic while audio reads
     for line in lines:
         table.speak(line)

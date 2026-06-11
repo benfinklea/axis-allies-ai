@@ -186,24 +186,28 @@
              box-shadow: 0 0 24px rgba(208,92,82,.3); }
   #dicebox.show { display: block; }
   #dicebox h2 { color: var(--axis); font-size: 14px; }
-  #dicebox input { background: #0c0e12; color: var(--ink); font-size: 20px;
-                letter-spacing: .25em; padding: 7px 10px;
-                border: 1px solid var(--line); border-radius: 10px;
+  #dicebox input { background: #0c0e12; color: var(--ink); font-size: 28px;
+                letter-spacing: .3em; padding: 12px 16px; min-width: 170px;
+                border: 1px solid var(--line); border-radius: 12px;
                 font-family: ui-monospace, Menlo, monospace; }
   #dicebox button[type=submit] { background: var(--axis); color: #fff;
-                 border: none; border-radius: 10px; padding: 11px 28px;
-                 font-size: 15px; font-weight: 800; cursor: pointer;
-                 margin-top: 12px; }
-  #dice-error { color: var(--gold); font-size: 13px; margin-top: 8px; }
-  .battle-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
-                 margin-top: 10px; }
-  .battle-side h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .1em;
+                 border: none; border-radius: 12px; padding: 14px 38px;
+                 font-size: 18px; font-weight: 800; cursor: pointer;
+                 margin-top: 14px; }
+  #dice-error { color: var(--gold); font-size: 15px; margin-top: 10px; }
+  #dicebox { padding: 20px 24px; }
+  .battle-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+                 margin-top: 14px; }
+  .battle-side h3 { margin: 0 0 10px; font-size: 15px; letter-spacing: .1em;
                     text-transform: uppercase; color: var(--dim); }
-  .bgroup { display: flex; align-items: center; gap: 10px; margin: 7px 0;
-            background: rgba(0,0,0,.25); border-radius: 8px; padding: 6px 10px; }
-  .bgroup .gdesc { flex: 1; font-size: 14px; }
-  .bgroup .ghint { color: var(--dim); font-size: 12px; }
-  .battle-title { font-size: 17px; font-weight: 800; margin-top: 4px; }
+  .bgroup { display: flex; align-items: center; gap: 14px; margin: 10px 0;
+            background: rgba(0,0,0,.25); border-radius: 10px;
+            padding: 10px 14px; }
+  .bgroup .gdesc { flex: 1; font-size: 19px; }
+  .bgroup .gicon { font-size: 30px; vertical-align: middle; }
+  .bgroup .ghint { color: var(--dim); font-size: 14px; display: block; }
+  .battle-title { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  #dice-title { font-size: 17px; }
   /* after submit: keep the board up, dimmed, with a resolving pulse */
   #dicebox.waiting input, #dicebox.waiting button {
     opacity: .45; pointer-events: none; }
@@ -468,11 +472,12 @@ function renderDice() {
       `${b.attacker.toUpperCase()} attacks ${b.defenders.map(d => d.toUpperCase()).join(", ")}`;
     const col = side => b.groups.filter(g => g.side === side).map(g => `
       <div class="bgroup">
-        <span class="gdesc">${FLAGS[g.power] || ""} ${uicon(g.unit)}
+        <span class="gdesc">${FLAGS[g.power] || ""}
+          <span class="gicon">${uicon(g.unit)}</span>
           <b>${g.count}× ${esc(g.unit)}</b>
           <span class="ghint">hits on ${g.target} or less</span></span>
         <input data-gid="${esc(g.id)}" maxlength="${g.count}"
-               size="${Math.max(g.count, 3)}" inputmode="numeric"
+               size="${Math.max(g.count + 1, 4)}" inputmode="numeric"
                autocomplete="off" placeholder="${g.count} ${g.count === 1 ? "die" : "dice"}">
       </div>`).join("");
     form.innerHTML = `
