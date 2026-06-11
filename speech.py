@@ -50,6 +50,7 @@ class Table:
         self.transcript.parent.mkdir(parents=True, exist_ok=True)
         self.voice = None  # set per power by the game loop
         self.on_speak = None  # optional hook: the game log listens here
+        self.turn_buffer = []  # everything said this turn (for turn reports)
 
     def _flags(self, text, voice):
         flags = ["-r", str(config.SPEECH_RATE)]
@@ -61,6 +62,7 @@ class Table:
         """Transcript + log + screen, but silent — for per-phase reasoning
         so the table isn't speechified six times per turn."""
         print(f"  ▸ {text}")
+        self.turn_buffer.append(text)
         with self.transcript.open("a") as f:
             f.write(text + "\n\n")
         if self.on_speak:
@@ -68,10 +70,13 @@ class Table:
 
     def speak(self, text, voice=None):
         print(f"  ▸ {text}")
+        self.turn_buffer.append(text)
         with self.transcript.open("a") as f:
             f.write(text + "\n\n")
         if self.on_speak:
             self.on_speak(text)
+        if (self.transcript.parent / "MUTE").exists():
+            return  # table muted the voice (viewer button); text still flows
         v = voice or self.voice
         text = spoken_form(text)
         if self.remote:

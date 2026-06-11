@@ -169,6 +169,7 @@ def payload():
         "transcript": _transcript_tail(),
         "photo_report": _photo_report(),
         "paused": (ROOT / Path(config.STATE_FILE).parent / "PAUSE").exists(),
+        "muted": (ROOT / Path(config.STATE_FILE).parent / "MUTE").exists(),
         "actions": _actions(),
     }
 
@@ -187,6 +188,20 @@ class Handler(BaseHTTPRequestHandler):
             path = ROOT / Path(config.STATE_FILE).parent / "actions.json"
             path.write_text(json.dumps({"items": []}))
             body = b'{"ok": true}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        if self.path == "/mute":  # toggle the voice without touching the game
+            flag = ROOT / Path(config.STATE_FILE).parent / "MUTE"
+            if flag.exists():
+                flag.unlink()
+            else:
+                flag.parent.mkdir(parents=True, exist_ok=True)
+                flag.write_text("muted via viewer\n")
+            body = json.dumps({"muted": flag.exists()}).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))

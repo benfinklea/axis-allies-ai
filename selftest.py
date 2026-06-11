@@ -13,9 +13,12 @@ import config
 
 config.SPEECH = False
 config.DICE_MODE = "auto"
-config.STATE_FILE = "logs/selftest_state.json"
-config.TRANSCRIPT = "logs/selftest_transcript.md"
-config.SNAPSHOT_DIR = "logs/selftest_snapshots"
+# fully isolated directory — selftest must NEVER touch the live game's
+# logs/ files (it once overwrote logs/turn_start.json and corrupted a
+# real game night's resume)
+config.STATE_FILE = "logs/selftest/state.json"
+config.TRANSCRIPT = "logs/selftest/transcript.md"
+config.SNAPSHOT_DIR = "logs/selftest/snapshots"
 
 import state as S
 
@@ -44,8 +47,8 @@ def main():
     }
     bplayers = build_players(all_stub=True)
     btable = Table()
-    Path("logs/selftest_games/selftest-battle.jsonl").unlink(missing_ok=True)
-    bglog = GameLog(bstate, "logs/selftest_games")
+    Path("logs/selftest/games/selftest-battle.jsonl").unlink(missing_ok=True)
+    bglog = GameLog(bstate, "logs/selftest/games")
     result = combat.resolve_battle(bstate, "Ukraine S.S.R.", "germany",
                                    UI(btable, bplayers, bstate, bglog))
     assert result in ("attacker", "defender", "retreat")
@@ -60,8 +63,8 @@ def main():
     table = Table()
     players = build_players(all_stub=True)
     state["game_id"] = "selftest"
-    Path("logs/selftest_games/selftest.jsonl").unlink(missing_ok=True)
-    glog = GameLog(state, "logs/selftest_games")
+    Path("logs/selftest/games/selftest.jsonl").unlink(missing_ok=True)
+    glog = GameLog(state, "logs/selftest/games")
     table.on_speak = glog.say
     for _ in range(2):
         for power in S.TURN_ORDER:

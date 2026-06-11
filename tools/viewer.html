@@ -139,6 +139,10 @@
               padding: 6px 16px; font-size: 14px; font-weight: 700; }
   #pausebtn.paused { background: var(--gold); color: #1a1408;
                      box-shadow: 0 0 14px rgba(232,195,90,.4); }
+  #mutebtn { background: var(--panel2); color: var(--ink); cursor: pointer;
+             border: 1px solid var(--line); border-radius: 10px;
+             padding: 6px 16px; font-size: 14px; font-weight: 700; }
+  #mutebtn.muted { background: var(--axis); color: #fff; }
   #todo { display: none; margin: 14px 20px 0; padding: 14px 18px;
           background: linear-gradient(180deg, #2a2410, #1d1a10);
           border: 2px solid var(--gold); border-radius: 12px;
@@ -165,6 +169,7 @@
       <div id="econfill"></div></div>
   </div>
   <button id="pausebtn" onclick="togglePause()">⏸ Pause</button>
+  <button id="mutebtn" onclick="toggleMute()">🔊 Sound on</button>
   <span id="status"></span>
 </div>
 <div id="todo">
@@ -235,6 +240,9 @@ function render() {
   const pb = document.getElementById("pausebtn");
   pb.textContent = data.paused ? "▶ Resume" : "⏸ Pause";
   pb.classList.toggle("paused", data.paused);
+  const mb = document.getElementById("mutebtn");
+  mb.textContent = data.muted ? "🔇 Muted" : "🔊 Sound on";
+  mb.classList.toggle("muted", data.muted);
   const todo = document.getElementById("todo");
   todo.classList.toggle("show", (data.actions || []).length > 0);
   document.getElementById("todo-items").innerHTML =
@@ -250,9 +258,16 @@ function render() {
       `(now ${data.axis_income})`;
   }
 
+  // preserve scroll positions inside thinking boxes across re-renders
+  const thoughtScroll = {};
+  document.querySelectorAll(".power").forEach(el => {
+    const t = el.querySelector(".thought");
+    if (t && t.scrollTop) thoughtScroll[el.dataset.power] = t.scrollTop;
+  });
   document.getElementById("powers").innerHTML = data.powers.map(p => `
     <div class="power ${p.power === data.turn ? "active" : ""}
                 ${p.eliminated ? "eliminated" : ""}"
+         data-power="${p.power}"
          style="--pc:${COLORS[p.power]}" onclick="openDrawer('${p.power}')">
       <header>
         <span class="flag">${FLAGS[p.power]}</span>
@@ -272,6 +287,11 @@ function render() {
       <div class="thought-label">💭 latest thinking</div>
       <div class="thought">${esc(p.last_thought)}</div>
     </div>`).join("");
+  document.querySelectorAll(".power").forEach(el => {
+    const t = el.querySelector(".thought");
+    if (t && thoughtScroll[el.dataset.power])
+      t.scrollTop = thoughtScroll[el.dataset.power];
+  });
 
   for (const side of ["allies", "axis"]) {
     const el = document.getElementById(side + "-notes");
@@ -356,6 +376,10 @@ async function togglePause() {
 }
 async function markDone() {
   await fetch("/done", {method: "POST"});
+  tick();
+}
+async function toggleMute() {
+  await fetch("/mute", {method: "POST"});
   tick();
 }
 

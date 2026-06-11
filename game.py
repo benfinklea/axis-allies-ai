@@ -251,6 +251,7 @@ def run_turn(state, players, table, power, glog):
     # clean snapshot of the turn's start: if the game dies mid-turn, resume
     # replays from HERE, not from a half-mutated checkpoint
     S.save(state, Path(config.STATE_FILE).parent / "turn_start.json")
+    table.turn_buffer = []
     board = S.summary_for_ai(state) + council.brief(state, power)
     checkpoint()
     table.speak(f"{power.upper()}'s turn. Treasury: {state['ipcs'][power]} IPCs.")
@@ -446,7 +447,7 @@ def main():
         # transcript/minds/actions live on in its corpus JSONL
         Path(config.TRANSCRIPT).parent.mkdir(parents=True, exist_ok=True)
         Path(config.TRANSCRIPT).write_text("")
-        for leftover in ("PAUSE", "actions.json"):
+        for leftover in ("PAUSE", "actions.json", "turn_start.json"):
             p = Path(config.STATE_FILE).parent / leftover
             if p.exists():
                 p.unlink()
@@ -474,6 +475,19 @@ def main():
         for power in order[start:]:
             state["turn"] = power
             run_turn(state, players, table, power, glog)
+            # brief every OTHER commander on what just happened, so they
+            # carry the whole game's story into their own next turn
+            report = (f"TURN REPORT — {power} has finished their turn:\n"
+                      + "\n".join(table.turn_buffer)
+                      + "\n\nIPC treasuries: "
+                      + ", ".join(f"{p}={state['ipcs'].get(p, 0)}"
+                                  for p in S.TURN_ORDER)
+                      + "\n(For your situational awareness while you wait. "
+                        "Do not reply; you will be prompted on your turn.)")
+            for other, pl in players.items():
+                if other != power and getattr(pl, "history", None):
+                    pl.history.append({"role": "user", "content": report})
+                    dump_mind(pl)
             # advance the pointer so a resume starts with the NEXT power
             # instead of replaying the turn that just finished
             nxt = order.index(power) + 1
