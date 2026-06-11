@@ -579,11 +579,26 @@ def run_turn(state, players, table, power, glog):
         factories = [t for t, by_p in state["units"].items()
                      if by_p.get(power, {}).get("factory")
                      and state["owners"].get(t) == power]
+
+        def placeable(unit, terr):
+            if terr not in S.TERR:
+                return False
+            if unit == "factory":  # new complex: an owned land territory
+                return (not S.TERR[terr]["water"]
+                        and state["owners"].get(terr) == power
+                        and terr not in factories)
+            if unit in S.SEA_UNITS:  # ships: a friendly sea zone touching
+                return (S.TERR[terr]["water"]  # a factory territory
+                        and not S.hostile_powers_in(state, terr, power)
+                        and any(terr in S.TERR[f]["adjacent"]
+                                for f in factories))
+            return terr in factories  # land + air: at the factory itself
+
         placed, bounced = {}, {}
         for pl in d.get("placements", []):
             unit = S.canon_unit(pl.get("unit")) or pl.get("unit")
             terr = pl.get("territory")
-            if pend.get(unit, 0) > 0 and (terr in factories or unit == "factory"):
+            if pend.get(unit, 0) > 0 and placeable(unit, terr):
                 S.add_units(state, terr, power, {unit: 1})
                 pend[unit] -= 1
                 bucket = placed
