@@ -186,6 +186,9 @@ def run_turn(state, players, table, power, glog):
                 time.sleep(1)
             table.speak("The war resumes.")
 
+    # clean snapshot of the turn's start: if the game dies mid-turn, resume
+    # replays from HERE, not from a half-mutated checkpoint
+    S.save(state, Path(config.STATE_FILE).parent / "turn_start.json")
     board = S.summary_for_ai(state) + council.brief(state, power)
     checkpoint()
     table.speak(f"{power.upper()}'s turn. Treasury: {state['ipcs'][power]} IPCs.")
@@ -359,6 +362,12 @@ def main():
     table = Table()
     fresh = "--new" in sys.argv or not Path(config.STATE_FILE).exists()
     state = S.new_game() if fresh else S.load(config.STATE_FILE)
+    ts_path = Path(config.STATE_FILE).parent / "turn_start.json"
+    if not fresh and ts_path.exists():
+        ts = S.load(ts_path)
+        if (ts.get("round"), ts.get("turn")) == \
+                (state.get("round"), state.get("turn")):
+            state = ts  # interrupted mid-turn: replay from the clean start
     if "game_id" not in state:
         state["game_id"] = time.strftime("%Y%m%d-%H%M%S")
     players = build_players(all_stub="--stub" in sys.argv)
