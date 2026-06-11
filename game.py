@@ -83,23 +83,32 @@ class UI:
         self.table.speak(text)
 
     def ask_casualties(self, power, pool, hits, terr, aa_fire=False):
-        player = self.players[power]
-        if isinstance(player, StubPlayer):
-            picked = player.casualties(pool, hits)
+        # only consult the AI when a real choice exists — forced outcomes
+        # resolve instantly so the dice keep their rhythm
+        types = [u for u, n in pool.items() if n]
+        if hits >= sum(pool.values()):
+            remove = dict(pool)
+        elif len(types) == 1:
+            remove = {types[0]: hits}
         else:
-            prompt = (f"Battle in {terr}. You must remove exactly {hits} of "
-                      f"these units as casualties: {json.dumps(pool)}.")
-            picked = call_ai(player, self.state, prompt, CASUALTY_SCHEMA)
-            dump_mind(player)
-            self.glog.ai(power, prompt, picked)
-        remove = {c["type"]: c["count"] for c in picked["remove"]}
-        # hard-validate: exactly `hits` units, all from the pool
-        if (sum(remove.values()) != hits
-                or any(pool.get(u, 0) < n for u, n in remove.items())):
-            self.table.note(f"{power} chose invalid casualties; "
-                            f"cheapest-first applied.")
-            remove = {c["type"]: c["count"] for c in
-                      StubPlayer(power, {}, "").casualties(pool, hits)["remove"]}
+            player = self.players[power]
+            if isinstance(player, StubPlayer):
+                picked = player.casualties(pool, hits)
+            else:
+                prompt = (f"Battle in {terr}. You must remove exactly {hits} "
+                          f"of these units as casualties: {json.dumps(pool)}.")
+                picked = call_ai(player, self.state, prompt, CASUALTY_SCHEMA)
+                dump_mind(player)
+                self.glog.ai(power, prompt, picked)
+            remove = {c["type"]: c["count"] for c in picked["remove"]}
+            # hard-validate: exactly `hits` units, all from the pool
+            if (sum(remove.values()) != hits
+                    or any(pool.get(u, 0) < n for u, n in remove.items())):
+                self.table.note(f"{power} chose invalid casualties; "
+                                f"cheapest-first applied.")
+                remove = {c["type"]: c["count"] for c in
+                          StubPlayer(power, {}, "")
+                          .casualties(pool, hits)["remove"]}
         self.speak(f"{power} loses " + ", ".join(f"{n} {u}" for u, n in remove.items()))
         return remove
 
@@ -107,7 +116,12 @@ class UI:
         player = self.players[power]
         if isinstance(player, StubPlayer):
             return player.press_or_retreat(terr)
-        prompt = (f"The battle for {terr} continues. Press the attack or "
+        mine = S.units_in(self.state, terr, power)
+        theirs = {p: S.units_in(self.state, terr, p)
+                  for p in S.hostile_powers_in(self.state, terr, power)}
+        prompt = (f"The battle for {terr} continues. Your remaining "
+                  f"attackers: {json.dumps(mine)}. Defenders still "
+                  f"standing: {json.dumps(theirs)}. Press the attack or "
                   f"retreat? (retreat_to must be a territory you attacked from)")
         decision = call_ai(player, self.state, prompt, PRESS_SCHEMA)
         dump_mind(player)
