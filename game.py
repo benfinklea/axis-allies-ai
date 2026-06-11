@@ -303,7 +303,8 @@ def validate_moves(state, power, decision, combat_allowed):
     trial = copy.deepcopy(state)
     errs = []
     for mv in decision.get("moves", []):
-        units = {u["type"]: u["count"] for u in mv.get("units", [])}
+        units = {(S.canon_unit(u["type"]) or u["type"]): u["count"]
+                 for u in mv.get("units", [])}
         desc = ", ".join(f"{n} {u}" for u, n in units.items())
         err = S.check_move(trial, power, units, mv.get("from", ""),
                            mv.get("to", ""),
@@ -344,7 +345,8 @@ def decide_moves(player, state, power, table, glog, base_prompt, stub_method,
 def apply_moves(state, table, power, decision, combat_allowed):
     todo, lines = [], []
     for mv in decision.get("moves", []):
-        units = {u["type"]: u["count"] for u in mv.get("units", [])}
+        units = {(S.canon_unit(u["type"]) or u["type"]): u["count"]
+                 for u in mv.get("units", [])}
         err = S.check_move(state, power, units, mv.get("from", ""),
                            mv.get("to", ""),
                            combat_air_landing=combat_allowed)
@@ -434,6 +436,17 @@ def run_turn(state, players, table, power, glog):
                  PURCHASE_SCHEMA, getattr(player, "purchases", None), glog)
     if d.get("reasoning"):
         table.note(d["reasoning"])
+    unknown = []
+    for p in d.get("purchases", []):
+        cu = S.canon_unit(p.get("unit"))
+        if cu:
+            p["unit"] = cu
+        else:
+            unknown.append(str(p.get("unit")))
+    if unknown:
+        table.speak(f"{power} asked to buy unknown unit(s) "
+                    f"{', '.join(unknown)} — skipped; the table referees "
+                    f"any correction.")
     cost = sum(S.STATS[p["unit"]]["cost"] * p["quantity"]
                for p in d.get("purchases", []) if p["unit"] in S.STATS)
     research = max(0, int(d.get("research_dice", 0))) if config.WEAPONS_DEVELOPMENT else 0
@@ -529,7 +542,8 @@ def run_turn(state, players, table, power, glog):
                      and state["owners"].get(t) == power]
         placed, bounced = {}, {}
         for pl in d.get("placements", []):
-            unit, terr = pl.get("unit"), pl.get("territory")
+            unit = S.canon_unit(pl.get("unit")) or pl.get("unit")
+            terr = pl.get("territory")
             if pend.get(unit, 0) > 0 and (terr in factories or unit == "factory"):
                 S.add_units(state, terr, power, {unit: 1})
                 pend[unit] -= 1

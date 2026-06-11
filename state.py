@@ -148,6 +148,44 @@ def air_landing_issue(state, power, unit, src, dst):
             f"friendly carrier). Pick a closer target or skip this strike")
 
 
+_UNIT_ALIASES = {
+    # The AIs speak English; the board speaks STATS keys. Map the common
+    # names so a "tank" or an "industrial complex" is never silently dropped.
+    "factory": ["industrial complex", "industrialcomplex", "complex", "ic",
+                "industrial"],
+    "armour": ["armor", "tank", "tanks"],
+    "aaGun": ["aa gun", "aagun", "aa", "antiaircraft", "anti-aircraft gun",
+              "antiaircraft gun"],
+    "submarine": ["sub", "subs"],
+    "carrier": ["aircraft carrier"],
+    "infantry": ["inf"],
+}
+_CANON = {}
+for _k, _names in _UNIT_ALIASES.items():
+    for _n in _names:
+        _CANON[_n] = _k
+
+
+def canon_unit(name):
+    """Canonical STATS key for a unit name an AI emitted, or None.
+    Case/space/underscore-insensitive, tolerates a trailing plural s."""
+    if not isinstance(name, str):
+        return None
+    raw = name.strip()
+    if raw in STATS:
+        return raw
+    low = " ".join(raw.lower().replace("_", " ").replace("-", " ").split())
+    for cand in (low, low[:-1] if low.endswith("s") else low):
+        if cand in STATS:
+            return cand
+        if cand in _CANON:
+            return _CANON[cand]
+        for k in STATS:
+            if cand == k.lower():
+                return k
+    return None
+
+
 def air_spent_pool(state, src, power, unit):
     """Remaining-movement entries for `unit` aircraft sitting in src that
     flew a combat move this turn. Casualties are unidentified, so be lenient:
