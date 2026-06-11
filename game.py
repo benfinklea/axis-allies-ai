@@ -197,10 +197,19 @@ class UI:
         mine = S.units_in(self.state, terr, power)
         theirs = {p: S.units_in(self.state, terr, p)
                   for p in S.hostile_powers_in(self.state, terr, power)}
+        origins = [o for o in
+                   self.state.get("attack_origins", {}).get(terr, [])
+                   if not S.hostile_powers_in(self.state, o, power)]
+        retreat_help = (f"If you retreat, ALL surviving attackers fall back "
+                        f"together, the way they came, to exactly ONE of "
+                        f"these spaces: {origins}. No other destination is "
+                        f"legal." if origins else
+                        "Retreat is NOT possible for this battle (no "
+                        "friendly origin space to fall back to).")
         prompt = (f"The battle for {terr} continues. Your remaining "
                   f"attackers: {json.dumps(mine)}. Defenders still "
                   f"standing: {json.dumps(theirs)}. Press the attack or "
-                  f"retreat? (retreat_to must be a territory you attacked from)")
+                  f"retreat? {retreat_help}")
         decision = call_ai(player, self.state, prompt, PRESS_SCHEMA)
         dump_mind(player)
         self.glog.ai(power, prompt, decision)
@@ -349,6 +358,13 @@ def apply_moves(state, table, power, decision, combat_allowed):
         desc = ", ".join(f"{n} {u}" for u, n in units.items())
         attack_tag = (f" — ATTACKING {' and '.join(defenders)} there"
                       if defenders else "")
+        if combat_allowed and defenders:
+            # remember where this attack came from: retreats may only
+            # fall back to one of these origins
+            origins = state.setdefault("attack_origins", {}) \
+                           .setdefault(mv["to"], [])
+            if mv["from"] not in origins:
+                origins.append(mv["from"])
         # unopposed entry into enemy-owned land flips it during combat movement
         if (combat_allowed and not S.TERR[mv["to"]]["water"]
                 and not S.hostile_powers_in(state, mv["to"], power)
@@ -447,6 +463,7 @@ def run_turn(state, players, table, power, glog):
 
     # 2-3. Combat movement + combat
     state["phase"] = "combat_move"
+    state["attack_origins"] = {}  # fresh each turn; retreats consult this
     checkpoint()
     board = S.summary_for_ai(state)
     d = decide_moves(player, state, power, table, glog,
