@@ -54,10 +54,13 @@
                  box-shadow: 0 6px 18px rgba(0,0,0,.4); }
   .power.active { outline: 2px solid var(--gold);
                   box-shadow: 0 0 22px rgba(232,195,90,.25); }
-  .power.active::after { content: "🎲 ON THE MOVE"; position: absolute;
-        top: -11px; right: 10px; background: var(--gold); color: #1a1408;
+  .power::after { content: var(--badge, "WAITING"); position: absolute;
+        top: -11px; right: 10px; background: var(--panel2);
+        color: var(--dim); border: 1px solid var(--line);
         font-size: 10px; font-weight: 800; letter-spacing: .06em;
         padding: 2px 8px; border-radius: 8px; }
+  .power.active::after { background: var(--gold); color: #1a1408;
+        border-color: var(--gold); }
   /* side tinting: spot the teams at a glance */
   .power.axis { background: linear-gradient(180deg, #2a1c1a, #1d1514); }
   .power.allies { background: linear-gradient(180deg, #182230, #131a24); }
@@ -274,6 +277,10 @@ const UICON  = {infantry:"🪖", armour:"🛡️", fighter:"🛩️", bomber:"�
                 aaGun:"🎯", factory:"🏭", transport:"🚢", submarine:"🔱",
                 carrier:"🛳️", battleship:"⚓"};
 const SIDEIC = {axis:"🦅", allies:"🕊️"};
+const PHASES = {briefing:"Briefing", purchase:"Buying",
+                combat_move:"C. Movement", combat:"Combat",
+                noncombat:"NC Movement", mobilize:"Place Units",
+                income:"Income", debrief:"Debrief", closing:"Final Words"};
 let data = null, filter = "units", openPower = null;
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g,
@@ -332,7 +339,9 @@ function render() {
     <div class="power ${p.side} ${p.power === data.turn ? "active" : ""}
                 ${p.eliminated ? "eliminated" : ""}"
          data-power="${p.power}"
-         style="--pc:${COLORS[p.power]}" onclick="openDrawer('${p.power}')">
+         style="--pc:${COLORS[p.power]}; --badge:'${p.power === data.turn
+           ? "🎲 " + (PHASES[data.phase] || data.phase) : "Waiting"}'"
+         onclick="openDrawer('${p.power}')">
       <header>
         <span class="flag">${FLAGS[p.power]}</span>
         <span class="name">${p.power}</span>

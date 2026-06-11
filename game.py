@@ -418,6 +418,8 @@ def run_turn(state, players, table, power, glog):
         state["purchased_pending"][power] = {u: n for u, n in pend.items() if n > 0}
 
     # 6. Income
+    state["phase"] = "income"
+    checkpoint()
     if state["owners"].get(S.CAPITALS[power]) == power:
         gain = S.income(state, power)
         state["ipcs"][power] += gain
