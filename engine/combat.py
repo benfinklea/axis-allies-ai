@@ -76,11 +76,14 @@ def resolve_battle(state, terr, attacker, ui):
         ui.speak(f"{terr}, combat round {rnd}.")
         tech_a = state["tech"].get(attacker, [])
 
-        # Sub surprise strike (classic: attacking subs fire first; casualties
-        # they cause don't fire back this round)
+        # Sub surprise strike — classic rule: the surprise attack happens ONCE,
+        # at the start of the FIRST round of a sea battle only. Casualties it
+        # causes are removed immediately and don't fire back. In every later
+        # round submarines fire on the normal battle board like any other ship
+        # (the fire-first-every-round variant is Revised 2004, not classic).
         pre_removed = {}
         subs = atk_units.get("submarine", 0)
-        if subs and "submarine" not in pre_removed:
+        if rnd == 1 and subs:
             sub_target = 3 if "super_subs" in tech_a else 2
             rolls = dice.battle(
                 [{"id": "sub", "side": "attacker", "power": attacker,
@@ -102,12 +105,14 @@ def resolve_battle(state, terr, attacker, ui):
                 def_by_power = {p: u for p, u in
                                 ((p, S.units_in(state, terr, p)) for p in defenders) if u}
 
-        # One battle board per round: every firing group, both sides, at once
+        # One battle board per round: every firing group, both sides, at once.
+        # Attacking subs sit out the round-1 board (they already made their
+        # surprise strike); from round 2 on they fire here like everyone else.
         groups = [{"id": f"a:{u}", "side": "attacker", "power": attacker,
                    "unit": u, "count": n, "target": t}
                   for u, n, t in _firepower(
                       {u: n for u, n in atk_units.items()
-                       if u != "submarine"}, "attack", tech_a)]
+                       if not (rnd == 1 and u == "submarine")}, "attack", tech_a)]
         for p, units in def_by_power.items():
             groups += [{"id": f"d:{p}:{u}", "side": "defender", "power": p,
                         "unit": u, "count": n, "target": t}
