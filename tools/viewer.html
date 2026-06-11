@@ -383,12 +383,11 @@ function render() {
     el.scrollTop = el.scrollHeight;
   }
 
+  // newest first, so the action is visible without scrolling
   const tr = document.getElementById("transcript");
-  const stick = tr.scrollHeight - tr.scrollTop - tr.clientHeight < 40;
-  tr.innerHTML = data.transcript.map(l =>
+  tr.innerHTML = data.transcript.slice().reverse().map(l =>
     `<div class="note">${esc(l)}</div>`).join("")
     || `<div class="note sys">📭 nothing spoken yet</div>`;
-  if (stick) tr.scrollTop = tr.scrollHeight;
 
   if (data.photo_report) {
     document.getElementById("photo-when").textContent =
