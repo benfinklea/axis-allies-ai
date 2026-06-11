@@ -186,15 +186,24 @@
              box-shadow: 0 0 24px rgba(208,92,82,.3); }
   #dicebox.show { display: block; }
   #dicebox h2 { color: var(--axis); font-size: 14px; }
-  #dice-label { font-size: 17px; font-weight: 700; margin: 6px 0 12px; }
-  #dice-input { background: #0c0e12; color: var(--ink); font-size: 22px;
-                letter-spacing: .3em; width: 180px; padding: 8px 12px;
+  #dicebox input { background: #0c0e12; color: var(--ink); font-size: 20px;
+                letter-spacing: .25em; padding: 7px 10px;
                 border: 1px solid var(--line); border-radius: 10px;
                 font-family: ui-monospace, Menlo, monospace; }
-  #dice-submit { background: var(--axis); color: #fff; border: none;
-                 border-radius: 10px; padding: 11px 24px; font-size: 15px;
-                 font-weight: 800; cursor: pointer; margin-left: 10px; }
+  #dicebox button[type=submit] { background: var(--axis); color: #fff;
+                 border: none; border-radius: 10px; padding: 11px 28px;
+                 font-size: 15px; font-weight: 800; cursor: pointer;
+                 margin-top: 12px; }
   #dice-error { color: var(--gold); font-size: 13px; margin-top: 8px; }
+  .battle-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+                 margin-top: 10px; }
+  .battle-side h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .1em;
+                    text-transform: uppercase; color: var(--dim); }
+  .bgroup { display: flex; align-items: center; gap: 10px; margin: 7px 0;
+            background: rgba(0,0,0,.25); border-radius: 8px; padding: 6px 10px; }
+  .bgroup .gdesc { flex: 1; font-size: 14px; }
+  .bgroup .ghint { color: var(--dim); font-size: 12px; }
+  .battle-title { font-size: 17px; font-weight: 800; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -215,13 +224,8 @@
   <span id="status"></span>
 </div>
 <div id="dicebox">
-  <h2>🎲 ROLL THE DICE</h2>
-  <div id="dice-label"></div>
-  <form onsubmit="return sendRoll(event)">
-    <input id="dice-input" inputmode="numeric" autocomplete="off"
-           placeholder="e.g. 531">
-    <button id="dice-submit">Submit roll</button>
-  </form>
+  <h2 id="dice-title">🎲 ROLL THE DICE</h2>
+  <form id="dice-form" onsubmit="return sendRoll(event)"></form>
   <div id="dice-error"></div>
 </div>
 <div id="todo">
@@ -309,15 +313,7 @@ function render() {
   todo.classList.toggle("show", (data.actions || []).length > 0);
   document.getElementById("todo-items").innerHTML =
     (data.actions || []).map(a => `<li>${esc(a)}</li>`).join("");
-  // dice form: update labels only — never re-render the input mid-typing
-  const dice = document.getElementById("dicebox");
-  dice.classList.toggle("show", !!data.dice);
-  if (data.dice) {
-    document.getElementById("dice-label").textContent =
-      `Roll ${data.dice.n} ${data.dice.n === 1 ? "die" : "dice"} — ${data.dice.label}`;
-    document.getElementById("dice-error").textContent = data.dice.error || "";
-    document.getElementById("dice-input").maxLength = data.dice.n;
-  }
+  renderDice();
   document.getElementById("phaseline").textContent = `phase: ${data.phase}`;
   document.getElementById("axinc").textContent = data.axis_income;
   document.getElementById("alinc").textContent = data.allies_income;
@@ -417,6 +413,54 @@ function render() {
   if (openPower) fillDrawer();
 }
 
+let diceSig = null;
+function renderDice() {
+  // rebuild the form ONLY when the request changes; error text updates
+  // freely — never clobber inputs mid-typing
+  const dq = data.dice;
+  document.getElementById("dicebox").classList.toggle("show", !!dq);
+  if (!dq) { diceSig = null; return; }
+  const b = dq.battle;
+  document.getElementById("dice-error").textContent =
+    (b ? b.error : dq.error) || "";
+  const sig = JSON.stringify(b ? [b.territory, b.round, b.note, b.groups]
+                               : [dq.n, dq.label]);
+  if (sig === diceSig) return;
+  diceSig = sig;
+  const form = document.getElementById("dice-form");
+  if (b) {
+    document.getElementById("dice-title").textContent =
+      `⚔️ ${b.territory} — ${b.note || "combat round " + b.round}: ` +
+      `${b.attacker.toUpperCase()} attacks ${b.defenders.map(d => d.toUpperCase()).join(", ")}`;
+    const col = side => b.groups.filter(g => g.side === side).map(g => `
+      <div class="bgroup">
+        <span class="gdesc">${FLAGS[g.power] || ""} ${uicon(g.unit)}
+          <b>${g.count}× ${esc(g.unit)}</b>
+          <span class="ghint">hits on ${g.target} or less</span></span>
+        <input data-gid="${esc(g.id)}" maxlength="${g.count}"
+               size="${Math.max(g.count, 3)}" inputmode="numeric"
+               autocomplete="off" placeholder="${g.count} ${g.count === 1 ? "die" : "dice"}">
+      </div>`).join("");
+    form.innerHTML = `
+      <div class="battle-cols">
+        <div class="battle-side"><h3>⚔️ Attacker — ${esc(b.attacker)}</h3>${col("attacker") || "<div class='ghint'>no attacking fire</div>"}</div>
+        <div class="battle-side"><h3>🛡️ Defender — ${esc(b.defenders.join(", "))}</h3>${col("defender") || "<div class='ghint'>no defending fire</div>"}</div>
+      </div>
+      <button type="submit">Submit all rolls</button>`;
+  } else {
+    document.getElementById("dice-title").textContent = "🎲 ROLL THE DICE";
+    form.innerHTML = `
+      <div class="bgroup"><span class="gdesc">Roll ${dq.n}
+        ${dq.n === 1 ? "die" : "dice"} — ${esc(dq.label)}</span>
+        <input data-gid="raw" maxlength="${dq.n}" size="${Math.max(dq.n, 3)}"
+               inputmode="numeric" autocomplete="off" placeholder="e.g. 531">
+      </div>
+      <button type="submit">Submit roll</button>`;
+  }
+  const first = form.querySelector("input");
+  if (first) first.focus();
+}
+
 function openDrawer(power) { openPower = power; fillDrawer();
   document.getElementById("drawer").classList.add("open"); }
 function closeDrawer() { openPower = null;
@@ -477,13 +521,19 @@ async function backupTurn() {
 }
 async function sendRoll(e) {
   e.preventDefault();
-  const input = document.getElementById("dice-input");
-  const raw = input.value.trim();
-  if (raw) {
-    await fetch("/roll", {method: "POST", body: JSON.stringify({raw})});
-    input.value = "";
-    setTimeout(tick, 700);  // give the game a beat to consume it
+  const inputs = [...document.querySelectorAll("#dice-form input")];
+  if (!inputs.length) return false;
+  const body = {};
+  if (inputs.length === 1 && inputs[0].dataset.gid === "raw") {
+    body.raw = inputs[0].value.trim();
+    if (!body.raw) return false;
+  } else {
+    body.rolls = {};
+    for (const i of inputs) body.rolls[i.dataset.gid] = i.value.trim();
   }
+  await fetch("/roll", {method: "POST", body: JSON.stringify(body)});
+  diceSig = null;  // allow rebuild on the next request (or error redisplay)
+  setTimeout(tick, 700);
   return false;
 }
 

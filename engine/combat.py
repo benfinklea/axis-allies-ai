@@ -36,8 +36,13 @@ def resolve_battle(state, terr, attacker, ui):
     air = {u: n for u, n in atk_units.items() if u in S.AIR_UNITS}
     if aa_owner and air and not S.TERR[terr]["water"]:
         n_air = sum(air.values())
-        rolls = dice.roll(n_air, f"{aa_owner} AA fire vs {n_air} aircraft",
-                          ui.dice_mode, ui.speak, ui.dice_log)
+        rolls = dice.battle(
+            [{"id": "aa", "side": "defender", "power": aa_owner,
+              "unit": "aaGun", "count": n_air, "target": 1}],
+            {"territory": terr, "round": 0, "attacker": attacker,
+             "defenders": defenders,
+             "note": f"AA fire vs {n_air} aircraft (one die each)"},
+            ui.dice_mode, ui.speak, ui.dice_log)["aa"]
         shot_down = _hits(rolls, 1)
         if shot_down:
             lost = ui.ask_casualties(attacker, air, shot_down, terr, aa_fire=True)
@@ -66,8 +71,13 @@ def resolve_battle(state, terr, attacker, ui):
         subs = atk_units.get("submarine", 0)
         if subs and "submarine" not in pre_removed:
             sub_target = 3 if "super_subs" in tech_a else 2
-            rolls = dice.roll(subs, f"{attacker} submarine surprise strike",
-                              ui.dice_mode, ui.speak, ui.dice_log)
+            rolls = dice.battle(
+                [{"id": "sub", "side": "attacker", "power": attacker,
+                  "unit": "submarine", "count": subs, "target": sub_target}],
+                {"territory": terr, "round": rnd, "attacker": attacker,
+                 "defenders": list(def_by_power),
+                 "note": "submarine surprise strike"},
+                ui.dice_mode, ui.speak, ui.dice_log)["sub"]
             h = _hits(rolls, sub_target)
             if h:
                 for p in list(def_by_power):
@@ -81,22 +91,30 @@ def resolve_battle(state, terr, attacker, ui):
                 def_by_power = {p: u for p, u in
                                 ((p, S.units_in(state, terr, p)) for p in defenders) if u}
 
-        # Attacker fire (subs already fired)
-        atk_fire = _firepower({u: n for u, n in atk_units.items() if u != "submarine"},
-                              "attack", tech_a)
-        atk_hits = 0
-        for u, n, target in atk_fire:
-            rolls = dice.roll(n, f"{attacker} {n} {u} (hit on {target} or less)",
-                              ui.dice_mode, ui.speak, ui.dice_log)
-            atk_hits += _hits(rolls, target)
-
-        # Defender fire (all defenders, all units, including subs at defense)
-        def_hits = 0
+        # One battle board per round: every firing group, both sides, at once
+        groups = [{"id": f"a:{u}", "side": "attacker", "power": attacker,
+                   "unit": u, "count": n, "target": t}
+                  for u, n, t in _firepower(
+                      {u: n for u, n in atk_units.items()
+                       if u != "submarine"}, "attack", tech_a)]
         for p, units in def_by_power.items():
-            for u, n, target in _firepower(units, "defense", state["tech"].get(p, [])):
-                rolls = dice.roll(n, f"{p} {n} {u} defending (hit on {target} or less)",
-                                  ui.dice_mode, ui.speak, ui.dice_log)
-                def_hits += _hits(rolls, target)
+            groups += [{"id": f"d:{p}:{u}", "side": "defender", "power": p,
+                        "unit": u, "count": n, "target": t}
+                       for u, n, t in _firepower(units, "defense",
+                                                 state["tech"].get(p, []))]
+        if not groups:
+            ui.speak(f"Neither side in {terr} can fire — the table referees "
+                     f"this standoff; attacker withdraws.")
+            return "stalemate"
+        rolls = dice.battle(groups,
+                            {"territory": terr, "round": rnd,
+                             "attacker": attacker,
+                             "defenders": list(def_by_power)},
+                            ui.dice_mode, ui.speak, ui.dice_log)
+        atk_hits = sum(_hits(rolls[g["id"]], g["target"])
+                       for g in groups if g["side"] == "attacker")
+        def_hits = sum(_hits(rolls[g["id"]], g["target"])
+                       for g in groups if g["side"] == "defender")
 
         # Casualties — AI-chosen, simultaneous removal
         if atk_hits:

@@ -251,11 +251,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/roll":  # die faces typed into the web form
             length = int(self.headers.get("Content-Length", 0))
             try:
-                raw = json.loads(self.rfile.read(length)).get("raw", "")
+                body = json.loads(self.rfile.read(length))
             except json.JSONDecodeError:
-                raw = ""
+                body = {}
             path = ROOT / Path(config.STATE_FILE).parent / "dice_response.json"
-            path.write_text(json.dumps({"raw": str(raw)}))
+            path.write_text(json.dumps(
+                {"raw": str(body.get("raw", "")),
+                 "rolls": body.get("rolls", {})}))
             body = b'{"ok": true}'
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
