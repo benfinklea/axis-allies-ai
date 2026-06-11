@@ -32,7 +32,7 @@ TECHS = ["jet_power", "rockets", "super_subs", "long_range_aircraft",
 def build_players(all_stub=False):
     rules = (ROOT / "prompts" / "rules_summary.md").read_text()
     rulebook = ROOT / "prompts" / "rulebook_full.txt"
-    if rulebook.exists():  # OCR of the physical rulebook; gitignored
+    if getattr(config, "RULEBOOK_IN_PROMPT", False) and rulebook.exists():
         rules += ("\n\n--- FULL RULEBOOK (classic 2nd edition, OCR of the "
                   "physical manual — authoritative when it conflicts with "
                   "the summary above; OCR artifacts possible) ---\n\n"

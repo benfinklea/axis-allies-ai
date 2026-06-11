@@ -20,6 +20,17 @@ class OpenAICompatPlayer(Player):
         self.history = [{"role": "system", "content": system_prompt}]
         self.supports_schema = True  # optimistic; degrade on first failure
 
+    # Subscription routes on the gateway pass prompts as CLI args, which
+    # the OS caps in size — keep total history under this many characters
+    # by dropping the oldest exchanges (system prompt always survives).
+    HISTORY_CHAR_BUDGET = 120_000
+
+    def _trim_history(self):
+        def total():
+            return sum(len(str(m.get("content", ""))) for m in self.history)
+        while total() > self.HISTORY_CHAR_BUDGET and len(self.history) > 4:
+            del self.history[1]  # oldest non-system message
+
     def _request(self, messages, schema):
         kwargs = dict(model=self.cfg["model"], messages=messages)
         if self.supports_schema:
@@ -33,6 +44,7 @@ class OpenAICompatPlayer(Player):
         ask = (f"{prompt}\n\nRespond with ONLY a JSON object matching this "
                f"schema (no prose, no code fences):\n{json.dumps(schema)}")
         self.history.append({"role": "user", "content": ask})
+        self._trim_history()
         try:
             resp = self._request(self.history, schema)
         except Exception:

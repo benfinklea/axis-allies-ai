@@ -58,11 +58,20 @@
         top: -11px; right: 10px; background: var(--gold); color: #1a1408;
         font-size: 10px; font-weight: 800; letter-spacing: .06em;
         padding: 2px 8px; border-radius: 8px; }
-  .power.thinking::after { content: "🧠 THINKING…"; animation: pulse 1.4s infinite; }
-  #thinkline { color: var(--gold); font-size: 13px; font-weight: 700; }
-  #thinkline .dots::after { content: ""; animation: dots 1.5s steps(4) infinite; }
-  @keyframes dots { 0% {content:"";} 25% {content:".";} 50% {content:"..";}
-                    75% {content:"...";} }
+  /* side tinting: spot the teams at a glance */
+  .power.axis { background: linear-gradient(180deg, #2a1c1a, #1d1514); }
+  .power.allies { background: linear-gradient(180deg, #182230, #131a24); }
+  .side-name { text-transform: capitalize; }
+  /* the model chip slow-flashes between the AI's name and "Thinking…",
+     left-aligned in a fixed cell so nothing shifts */
+  .chip.flip { display: inline-grid; text-align: left; }
+  .chip.flip > span { grid-area: 1 / 1; text-transform: capitalize; }
+  .chip.flip > .fa { animation: flipA 4s infinite; }
+  .chip.flip > .fb { animation: flipB 4s infinite; color: var(--gold); }
+  @keyframes flipA { 0%, 45% {opacity: 1;} 55%, 90% {opacity: 0;}
+                     100% {opacity: 1;} }
+  @keyframes flipB { 0%, 45% {opacity: 0;} 55%, 90% {opacity: 1;}
+                     100% {opacity: 0;} }
   .power.eliminated { opacity: .4; filter: grayscale(.8); }
   .power header { display: flex; justify-content: space-between;
                   align-items: center; gap: 8px; }
@@ -190,7 +199,6 @@
   <div id="live"></div>
   <span class="big" id="roundline">⚙️ connecting…</span>
   <span class="dim" id="phaseline"></span>
-  <span id="thinkline"></span>
   <div id="econwrap">
     <div class="lbl"><span>⚔️ Axis economy <b id="axinc">0</b></span>
       <span>🕊️ Allies <b id="alinc">0</b></span></div>
@@ -304,9 +312,6 @@ function render() {
     document.getElementById("dice-input").maxLength = data.dice.n;
   }
   document.getElementById("phaseline").textContent = `phase: ${data.phase}`;
-  document.getElementById("thinkline").innerHTML = data.thinking
-    ? `🧠 ${esc(data.thinking.power.toUpperCase())} is thinking<span class="dots"></span>`
-    : "";
   document.getElementById("axinc").textContent = data.axis_income;
   document.getElementById("alinc").textContent = data.allies_income;
   if (data.econ_threshold) {
@@ -324,18 +329,19 @@ function render() {
     if (t && t.scrollTop) thoughtScroll[el.dataset.power] = t.scrollTop;
   });
   document.getElementById("powers").innerHTML = data.powers.map(p => `
-    <div class="power ${p.power === data.turn ? "active" : ""}
-                ${data.thinking && data.thinking.power === p.power ? "thinking" : ""}
+    <div class="power ${p.side} ${p.power === data.turn ? "active" : ""}
                 ${p.eliminated ? "eliminated" : ""}"
          data-power="${p.power}"
          style="--pc:${COLORS[p.power]}" onclick="openDrawer('${p.power}')">
       <header>
         <span class="flag">${FLAGS[p.power]}</span>
         <span class="name">${p.power}</span>
-        <span class="chip">🧠 ${esc(p.model)}</span>
+        ${data.thinking && data.thinking.power === p.power
+          ? `<span class="chip flip"><span class="fa">🧠 ${esc(p.model)}</span><span class="fb">🧠 Thinking…</span></span>`
+          : `<span class="chip"><span style="text-transform:capitalize">🧠 ${esc(p.model)}</span></span>`}
       </header>
       <div class="stats">
-        <span>${SIDEIC[p.side]} <b>${p.side}</b></span>
+        <span>${SIDEIC[p.side]} <b class="side-name">${p.side}</b></span>
         <span>💰 <b>${p.ipcs}</b></span>
         <span>📈 <b>${p.income}</b>/turn</span>
         <span>🔊 <b>${esc((p.voice || "").split(" ")[0])}</b></span>

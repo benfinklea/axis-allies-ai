@@ -9,6 +9,12 @@ WAR_COUNCIL = True           # allies share notes between turns
 DICE_MODE = "manual"         # "manual" = physical dice typed in; "auto" = script rolls
 CASUALTY_CHOICE = "ai"       # always AI-chosen (locked decision)
 
+# Full OCR'd rulebook in every system prompt (~29k tokens). OFF: the
+# gateway's subscription routes (codex/fable/gemini) pass prompts as CLI
+# arguments and hit the OS argv size limit — it crashed Germany twice on
+# 2026-06-10. Re-enable only after the gateway takes prompts via stdin.
+RULEBOOK_IN_PROMPT = False
+
 # --- The roster (game one) -------------------------------------------------
 # provider: "anthropic" | "openai_compat" | "stub"
 # Local models go through the fleet gateway (one OpenAI-compatible endpoint
