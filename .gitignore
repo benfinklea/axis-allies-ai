@@ -1,2 +1,6 @@
 logs/
 __pycache__/
+
+# copyrighted rulebook scan + OCR text stay local (public repo)
+prompts/rulebook_full.txt
+prompts/rulebook.pdf
